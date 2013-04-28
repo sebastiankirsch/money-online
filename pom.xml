@@ -1,34 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
-    <packaging>war</packaging>
-
-    <version>0.2-SNAPSHOT</version>
     <groupId>net.tcc</groupId>
-
     <artifactId>money-online</artifactId>
+    <packaging>war</packaging>
+    <version>0.2-SNAPSHOT</version>
+
+    <inceptionYear>2013</inceptionYear>
+    <name>An online version of Sebastian Kirsch's Money</name>
+    <description>Money Online is (or shall be) a neat tool with which to keep track of your spendings for food, clothes, alcohol - whatever you want.</description>
+    <url>https://github.com/sebastiankirsch/money-online</url>
+    <developers>
+        <developer>
+            <id>sebastiankirsch</id>
+            <name>Sebastian Kirsch</name>
+            <url>https://github.com/sebastiankirsch</url>
+        </developer>
+    </developers>
+    <licenses>
+        <license>
+            <name>GNU General Public License (GPL) 3.0</name>
+            <url>http://www.gnu.org/licenses/gpl-3.0.html</url>
+        </license>
+    </licenses>
+    <scm>
+        <connection>scm:git:https://github.com/sebastiankirsch/money-online.git</connection>
+        <url>https://github.com/sebastiankirsch/money-online</url>
+    </scm>
+    <issueManagement>
+        <url>https://github.com/sebastiankirsch/money-online/issues</url>
+    </issueManagement>
 
     <properties>
-        <appengine.appId>money--online</appengine.appId>
-        <appengine.app.version>2</appengine.app.version>
+        <!-- Define money-online.appengine.appId & money-online.appengine.version in your settings.xml -->
+        <appengine.appId>${money-online.appengine.appId}</appengine.appId>
+        <appengine.app.version>${money-online.appengine.version}</appengine.app.version>
+
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Dependency versions -->
         <appengine.target.version>1.7.7.1</appengine.target.version>
         <gwt.target.version>2.5.1</gwt.target.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.5.1</version>
-                <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
-                </configuration>
-            </plugin>
-
             <plugin>
                 <groupId>org.datanucleus</groupId>
                 <artifactId>maven-datanucleus-plugin</artifactId>
@@ -143,11 +163,14 @@
             <version>${gwt.target.version}</version>
             <scope>compile</scope>
         </dependency>
-        <!--<dependency>-->
-        <!--<groupId>com.google.guava</groupId>-->
-        <!--<artifactId>guava</artifactId>-->
-        <!--<version>14.0.1</version>-->
-        <!--</dependency>-->
+
+        <!-- RUNTIME dependencies -->
+        <dependency>
+            <groupId>com.google.appengine</groupId>
+            <artifactId>appengine-endpoints</artifactId>
+            <version>${appengine.target.version}</version>
+            <scope>runtime</scope>
+        </dependency>
 
         <!-- TEST dependencies -->
         <dependency>
@@ -161,14 +184,6 @@
             <artifactId>appengine-testing</artifactId>
             <version>${appengine.target.version}</version>
             <scope>test</scope>
-        </dependency>
-
-        <!-- RUNTIME dependencies -->
-        <dependency>
-            <groupId>com.google.appengine</groupId>
-            <artifactId>appengine-endpoints</artifactId>
-            <version>${appengine.target.version}</version>
-            <scope>runtime</scope>
         </dependency>
     </dependencies>
 
