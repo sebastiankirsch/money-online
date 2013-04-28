@@ -5,8 +5,8 @@
 
     <security-constraint>
         <web-resource-collection>
+            <url-pattern>/OnlineMoney.html</url-pattern>
             <url-pattern>/online_money/shoppingService/*</url-pattern>
-            <url-pattern>OnlineMoney.html</url-pattern>
         </web-resource-collection>
         <auth-constraint>
             <role-name>*</role-name>
