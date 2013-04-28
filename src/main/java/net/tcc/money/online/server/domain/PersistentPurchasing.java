@@ -12,6 +12,7 @@ import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
 
 import com.google.appengine.repackaged.com.google.common.base.Function;
+import net.tcc.gae.AbstractEntity;
 import net.tcc.money.online.shared.Constants;
 import net.tcc.money.online.shared.dto.Category;
 import net.tcc.money.online.shared.dto.Purchasing;
@@ -19,21 +20,22 @@ import net.tcc.money.online.shared.dto.Purchasing;
 import com.google.appengine.datanucleus.annotations.Unowned;
 
 @PersistenceCapable
-public class PersistentPurchasing implements Serializable {
+public class PersistentPurchasing extends AbstractEntity<String> implements Serializable {
 
 	private static final long serialVersionUID = Constants.SERIAL_VERSION;
 
 	public static final Function<PersistentPurchasing, Purchasing> toPurchasing = new Function<PersistentPurchasing, Purchasing>() {
-		@Override
-		@Nonnull
-		public Purchasing apply(@Nonnull PersistentPurchasing purchasing) {
+		@Nullable
+        @Override
+		public Purchasing apply(@Nullable PersistentPurchasing purchasing) {
 			return purchasing == null ? null : purchasing.toPurchasing();
 		}
 	};
 
+    @Extension(vendorName = "datanucleus", key = "gae.encoded-pk", value = "true")
+    @Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
 	@PrimaryKey
-	@Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
-	@Extension(vendorName = "datanucleus", key = "gae.encoded-pk", value = "true")
+    @SuppressWarnings("unused") // written by JDO
 	private String key;
 
 	@Nonnull
@@ -54,9 +56,10 @@ public class PersistentPurchasing implements Serializable {
 	@Unowned
 	private PersistentCategory category;
 
+    @Deprecated
 	@SuppressWarnings("unused")
-	private PersistentPurchasing() {// for JDO
-		super();
+	private PersistentPurchasing() {
+        // for JDO
 	}
 
 	public PersistentPurchasing(@Nonnull PersistentArticle article, @Nullable BigDecimal quantity,
@@ -72,5 +75,10 @@ public class PersistentPurchasing implements Serializable {
 		Category category = this.category == null ? null : this.category.toCategory();
 		return new Purchasing(article.toArticle(), quantity, price, category);
 	}
+
+    @Override
+    protected String getKey() {
+        return this.key;
+    }
 
 }
