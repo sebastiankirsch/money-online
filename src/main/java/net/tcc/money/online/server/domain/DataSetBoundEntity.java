@@ -1,10 +1,12 @@
 package net.tcc.money.online.server.domain;
 
+import net.tcc.gae.AbstractEntity;
 import net.tcc.money.online.shared.Constants;
 
 import java.io.Serializable;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.jdo.annotations.IdGeneratorStrategy;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
@@ -15,14 +17,16 @@ import javax.jdo.annotations.PrimaryKey;
 
 @PersistenceCapable
 @Inheritance(strategy = InheritanceStrategy.SUBCLASS_TABLE)
-public abstract class DataSetBoundEntity implements Serializable {
+public abstract class DataSetBoundEntity extends AbstractEntity<Long> implements Serializable {
 
 	private static final long serialVersionUID = Constants.SERIAL_VERSION;
 
-	@PrimaryKey
-	@Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
-	private Long key;
+    @Nullable
+    @Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
+    @PrimaryKey
+    private Long key;
 
+    @Nonnull
 	@Persistent(nullValue = NullValue.EXCEPTION)
 	private String dataSetId;
 
@@ -35,26 +39,8 @@ public abstract class DataSetBoundEntity implements Serializable {
 		this.dataSetId = dataSetId;
 	}
 
-	@Override
-	public boolean equals(Object o) {
-		if (o == null || key == null) {
-			return false;
-		}
-		if (o == this) {
-			return true;
-		}
-		if (o.getClass() != getClass()) {
-			return false;
-		}
-		DataSetBoundEntity other = (DataSetBoundEntity) o;
-		return key.equals(other.key);
-	}
-
-	@Override
-	public int hashCode() {
-		return key == null ? Integer.MIN_VALUE : key.hashCode();
-	}
-
+    @Nonnull
+    @Override
 	public Long getKey() {
 		return key;
 	}
