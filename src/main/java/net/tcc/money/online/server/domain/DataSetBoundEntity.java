@@ -15,8 +15,8 @@ import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
 
-@PersistenceCapable
 @Inheritance(strategy = InheritanceStrategy.SUBCLASS_TABLE)
+@PersistenceCapable
 public abstract class DataSetBoundEntity extends AbstractEntity<Long> implements Serializable {
 
 	private static final long serialVersionUID = Constants.SERIAL_VERSION;
@@ -24,10 +24,12 @@ public abstract class DataSetBoundEntity extends AbstractEntity<Long> implements
     @Nullable
     @Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
     @PrimaryKey
+    @SuppressWarnings("unused") // written by JDO
     private Long key;
 
     @Nonnull
 	@Persistent(nullValue = NullValue.EXCEPTION)
+    @SuppressWarnings({"unused", "FieldCanBeLocal"}) // used in queries etc
 	private String dataSetId;
 
 	@Deprecated
@@ -39,7 +41,7 @@ public abstract class DataSetBoundEntity extends AbstractEntity<Long> implements
 		this.dataSetId = dataSetId;
 	}
 
-    @Nonnull
+    @Nullable
     @Override
 	public Long getKey() {
 		return key;

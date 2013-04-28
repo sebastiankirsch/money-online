@@ -5,6 +5,7 @@ public abstract class AbstractEntity<Key> {
     protected abstract Key getKey();
 
     @Override
+    @SuppressWarnings("SimplifiableIfStatement")
     public boolean equals(Object o) {
         Key key = getKey();
         if (o == null || key == null) {
