@@ -112,19 +112,19 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
 	@Override
 	public Category createCategory(@Nonnull final String name, @Nullable final Category parent) {
 		final String dataSetId = getDataSetId();
-        return ServerTools.executeWithoutTransaction(new PersistenceTemplate<Category>() {
+        return ServerTools.executeWithoutTransaction(new PersistenceTemplate<PersistentCategory>() {
             @Override
-            public Category doWithPersistenceManager(PersistenceManager pm) {
+            public PersistentCategory doWithPersistenceManager(PersistenceManager pm) {
                 PersistentCategory parentCategory = parent == null ? null : pm.getObjectById(PersistentCategory.class,
                         parent.getKey());
                 Transaction tx = startTransaction(pm);
                 try {
-                    return pm.makePersistent(new PersistentCategory(dataSetId, name, parentCategory)).toCategory();
+                    return pm.makePersistent(new PersistentCategory(dataSetId, name, parentCategory));
                 } finally {
                     tx.commit();
                 }
             }
-        });
+        }).toCategory();
 	}
 
 	@Nonnull
