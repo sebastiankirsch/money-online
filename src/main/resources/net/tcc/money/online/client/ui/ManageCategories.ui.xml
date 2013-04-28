@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:UiBinder
+	xmlns:g='urn:import:com.google.gwt.user.client.ui'
+	xmlns:ui='urn:ui:com.google.gwt.uibinder'>
+	<g:VerticalPanel>
+		<g:Button ui:field="newCategory" enabled="false">Neue Kategorie</g:Button>
+		<g:Tree ui:field="categoryTree"/>
+	</g:VerticalPanel>
+</ui:UiBinder>

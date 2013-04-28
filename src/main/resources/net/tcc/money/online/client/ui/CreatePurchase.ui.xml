@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:UiBinder
+	xmlns:d='urn:import:com.google.gwt.user.datepicker.client'
+	xmlns:g='urn:import:com.google.gwt.user.client.ui'
+	xmlns:ui='urn:ui:com.google.gwt.uibinder'>
+	<g:VerticalPanel horizontalAlignment="center" styleName="centeredPanel">
+		<g:Label>Wo und wann hast Du eingekauft?</g:Label>
+	    <g:Grid cellPadding="4">
+	    	<g:row verticalAlignment="middle">
+		    	<g:customCell horizontalAlignment="right">
+					<g:ListBox ui:field="selectedShop" focus="true" width="100%"/>
+		    	</g:customCell>
+		    	<g:customCell>
+					<g:Button ui:field="newShop" text="Anderer Laden" width="100%"/>
+		    	</g:customCell>
+	    	</g:row>
+	    	<g:row verticalAlignment="middle">
+		    	<g:customCell horizontalAlignment="right">
+					<d:DateBox ui:field="purchaseDate" width="100%"/>
+		    	</g:customCell>
+		    	<g:customCell>
+					<g:Button ui:field="ok" text="Einkaufen!" width="100%"/>
+		    	</g:customCell>
+	    	</g:row>
+	    </g:Grid>
+	    <g:Label ui:field="errors" styleName="errorLabel"/>
+	</g:VerticalPanel>
+</ui:UiBinder>

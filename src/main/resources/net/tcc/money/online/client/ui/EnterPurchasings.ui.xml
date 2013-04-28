@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:UiBinder
+	xmlns:g='urn:import:com.google.gwt.user.client.ui'
+	xmlns:ui='urn:ui:com.google.gwt.uibinder'>
+	<g:VerticalPanel horizontalAlignment="center" styleName="centeredPanel">
+		<g:Label>Bitte gebe Deine Anschaffungen an!</g:Label>
+	    <g:Grid ui:field="purchasings">
+	    	<g:row styleName="purchasingsHeader">
+	    		<g:cell>Article</g:cell>
+	    		<g:cell>Brand</g:cell>
+	    		<g:cell>Bio</g:cell>
+	    		<g:cell>Lot size</g:cell>
+	    		<g:cell>Menge</g:cell>
+	    		<g:cell>Preis</g:cell>
+	    		<g:cell>Kategorie</g:cell>
+	    	</g:row>
+	    </g:Grid>
+	    <g:HorizontalPanel>
+			<g:Button text="Abbrechen" ui:field="cancel"/>
+			<g:Button text="OK" ui:field="ok"/>
+	    </g:HorizontalPanel>
+	    <g:Label ui:field="errors" styleName="errorLabel"/>
+	</g:VerticalPanel>
+</ui:UiBinder>

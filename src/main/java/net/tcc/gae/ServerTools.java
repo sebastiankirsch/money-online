@@ -7,7 +7,7 @@ import javax.jdo.Transaction;
 
 public final class ServerTools {
 
-    private static final PersistenceManagerFactory pmfInstance = JDOHelper.getPersistenceManagerFactory();
+    private static final PersistenceManagerFactory pmfInstance = JDOHelper.getPersistenceManagerFactory("default");
 
     public static PersistenceManager getPersistenceManager() {
         return pmfInstance.getPersistenceManager();
@@ -28,6 +28,13 @@ public final class ServerTools {
         Transaction tx = pm.currentTransaction();
         tx.begin();
         return tx;
+    }
+
+    public static void rollback(PersistenceManager pm) {
+        Transaction tx = pm.currentTransaction();
+        if (tx.isActive()) {
+            tx.rollback();
+        }
     }
 
     private static <T> T execute(PersistenceTemplate<T> template, boolean withTransaction) {

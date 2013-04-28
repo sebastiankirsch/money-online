@@ -1,0 +1,72 @@
+h1 {
+	font-size: 2em;
+	font-weight: bold;
+	color: #777777;
+	margin: 40px 0px 40px;
+	text-align: center;
+}
+
+#mainPanel {
+	position: relative;
+}
+
+.leftSidePanel {
+	float: left;
+	width: 128px;
+}
+
+#contentPanel {
+	border-left: 1px solid #ccc;
+	margin-left: 129px;
+	min-height: 480px;
+}
+
+.centeredPanel {
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+}
+
+.purchasingsHeader {
+	font-size: 1.7em;
+	font-weight: bold;
+	color: #444444;
+	margin: 7px;
+	text-align: center;
+}
+
+.purchasing-lotSize {
+	width: 4em;
+}
+
+.purchasing-quantity {
+	width: 4em;
+}
+
+.purchasing-price {
+	width: 5em;
+}
+
+.errorLabel {
+	color: red;
+}
+
+.bold {
+	font-weight: bold;
+}
+
+.italic {
+	font-style: italic;
+}
+
+.gwt-DialogBox {
+ 	width: 400px;
+}
+
+.gwt-Button {
+  margin: 6px;
+}
+
+.dialogVPanel {
+	margin: 5px;
+}

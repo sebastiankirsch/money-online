@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:UiBinder
+	xmlns:g='urn:import:com.google.gwt.user.client.ui'
+	xmlns:ui='urn:ui:com.google.gwt.uibinder'>
+	<g:VerticalPanel>
+		<g:Anchor ui:field="newPurchase" href="#">Einkauf erfassen</g:Anchor>
+		<g:Anchor ui:field="manageCategories" href="#">Kategorien bearbeiten</g:Anchor>
+		<g:Anchor ui:field="listPurchases" href="#">Einkäufe anzeigen</g:Anchor>
+	</g:VerticalPanel>
+</ui:UiBinder>
