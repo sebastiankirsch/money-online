@@ -10,7 +10,9 @@
 
     <inceptionYear>2013</inceptionYear>
     <name>An online version of Sebastian Kirsch's Money</name>
-    <description>Money Online is (or shall be) a neat tool with which to keep track of your spendings for food, clothes, alcohol - whatever you want.</description>
+    <description>Money Online is (or shall be) a neat tool with which to keep track of your spendings for food, clothes,
+        alcohol - whatever you want.
+    </description>
     <url>https://github.com/sebastiankirsch/money-online</url>
     <developers>
         <developer>
@@ -48,6 +50,39 @@
     </properties>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-war-plugin</artifactId>
+                    <version>2.3</version>
+                    <configuration>
+                        <archiveClasses>true</archiveClasses>
+                        <webResources>
+                            <!-- in order to interpolate version from pom into appengine-web.xml -->
+                            <resource>
+                                <directory>${basedir}/src/main/webapp/WEB-INF</directory>
+                                <filtering>true</filtering>
+                                <targetPath>WEB-INF</targetPath>
+                            </resource>
+                        </webResources>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>gwt-maven-plugin</artifactId>
+                    <version>2.5.1</version>
+                    <configuration>
+                        <appEngineVersion>${appengine.target.version}</appEngineVersion>
+                        <module>net.tcc.money.online.OnlineMoney</module>
+                        <runTarget>OnlineMoney.html</runTarget>
+                        <server>com.google.appengine.tools.development.gwt.AppEngineLauncher</server>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
         <plugins>
             <plugin>
                 <groupId>org.datanucleus</groupId>
@@ -74,43 +109,11 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>2.3</version>
-                <configuration>
-                    <!--<archiveClasses>true</archiveClasses>-->
-                    <webResources>
-                        <!-- in order to interpolate version from pom into appengine-web.xml -->
-                        <resource>
-                            <directory>${basedir}/src/main/webapp/WEB-INF</directory>
-                            <filtering>true</filtering>
-                            <targetPath>WEB-INF</targetPath>
-                        </resource>
-                    </webResources>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>exploded</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>gwt-maven-plugin</artifactId>
-                <version>2.5.1</version>
-                <configuration>
-                    <appEngineVersion>${appengine.target.version}</appEngineVersion>
-                    <!--<extraJvmArgs></extraJvmArgs>-->
-                    <module>net.tcc.money.online.OnlineMoney</module>
-                    <runTarget>OnlineMoney.html</runTarget>
-                    <server>com.google.appengine.tools.development.gwt.AppEngineLauncher</server>
-                </configuration>
                 <executions>
                     <execution>
+                        <phase>prepare-package</phase>
                         <goals>
                             <goal>compile</goal>
                         </goals>
@@ -161,7 +164,6 @@
             <groupId>com.google.gwt</groupId>
             <artifactId>gwt-servlet</artifactId>
             <version>${gwt.target.version}</version>
-            <scope>compile</scope>
         </dependency>
 
         <!-- RUNTIME dependencies -->
@@ -186,5 +188,43 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>local-dev</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-war-plugin</artifactId>
+                        <configuration>
+                            <archiveClasses>false</archiveClasses>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>exploded</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>gwt-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>compile</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
