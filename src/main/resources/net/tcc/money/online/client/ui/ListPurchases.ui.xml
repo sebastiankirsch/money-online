@@ -4,7 +4,7 @@
 	xmlns:g='urn:import:com.google.gwt.user.client.ui'
 	xmlns:ui='urn:ui:com.google.gwt.uibinder'>
 	<g:VerticalPanel>
-        <c:CellTable ui:field='purchases' pageSize='3' width='100%'/>
+        <c:CellTable ui:field='purchases' pageSize='42' width='100%'/>
         <c:SimplePager ui:field='pager' location='CENTER' />
 	</g:VerticalPanel>
 </ui:UiBinder>
