@@ -1,11 +1,14 @@
 package net.tcc.money.online.client;
 
+import com.google.gwt.view.client.Range;
 import net.tcc.money.online.shared.dto.Article;
 import net.tcc.money.online.shared.dto.Category;
 import net.tcc.money.online.shared.dto.Purchase;
 import net.tcc.money.online.shared.dto.Shop;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
+
+import java.util.List;
 
 public interface ShoppingServiceAsync {
 
@@ -25,6 +28,6 @@ public interface ShoppingServiceAsync {
 
 	void setCategoryFor(Article article, Category category, AsyncCallback<Article> asyncCallback);
 
-	void loadPurchases(AsyncCallback<Iterable<Purchase>> asyncCallback);
+    void loadPurchases(Range range, String columnName, boolean ascending, AsyncCallback<List<Purchase>> asyncCallback);
 
 }

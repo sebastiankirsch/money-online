@@ -6,23 +6,26 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.cellview.client.*;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.view.client.AsyncDataProvider;
 import com.google.gwt.view.client.HasData;
 import com.google.gwt.view.client.Range;
+import net.tcc.money.online.client.ExceptionHandler;
+import net.tcc.money.online.client.ShoppingServiceAsync;
 import net.tcc.money.online.shared.dto.Purchase;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class ListPurchases extends Composite {
 
-	interface MyUiBinder extends UiBinder<VerticalPanel, ListPurchases> {
-	}
+    interface MyUiBinder extends UiBinder<VerticalPanel, ListPurchases> {
+    }
 
-	private static MyUiBinder uiBinder = GWT.create(MyUiBinder.class);
+    private static MyUiBinder uiBinder = GWT.create(MyUiBinder.class);
 
     @UiField
     CellTable<Purchase> purchases;
@@ -30,18 +33,12 @@ public class ListPurchases extends Composite {
     @UiField
     SimplePager pager;
 
-	public ListPurchases(Iterable<Purchase> purchases) {
+    public ListPurchases(ShoppingServiceAsync shoppingService, ExceptionHandler exceptionHandler) {
         initWidget(uiBinder.createAndBindUi(this));
 
         pager.setDisplay(this.purchases);
-
         initColumns();
-
-        final ArrayList<Purchase> values = new ArrayList<Purchase>();
-        for(Purchase p:purchases)
-        values.add(p);
-
-        setUpDataProvider(values);
+        setUpDataProvider(shoppingService, exceptionHandler);
     }
 
     private void initColumns() {
@@ -53,15 +50,14 @@ public class ListPurchases extends Composite {
         };
         dateColumn.setSortable(true);
         dateColumn.setDefaultSortAscending(false);
+        dateColumn.setDataStoreName("purchaseDate");
         this.purchases.addColumn(dateColumn, "Datum");
-        TextColumn<Purchase> shopColumn = new TextColumn<Purchase>() {
+        this.purchases.addColumn(new TextColumn<Purchase>() {
             @Override
             public String getValue(Purchase purchase) {
                 return purchase.getShop().getName();
             }
-        };
-        shopColumn.setSortable(true);
-        this.purchases.addColumn(shopColumn, "Laden");
+        }, "Laden");
         this.purchases.addColumn(new Column<Purchase, Number>(new NumberCell()) {
             @Override
             public BigDecimal getValue(Purchase purchase) {
@@ -71,27 +67,39 @@ public class ListPurchases extends Composite {
 
         ColumnSortEvent.AsyncHandler columnSortHandler = new ColumnSortEvent.AsyncHandler(this.purchases);
         this.purchases.addColumnSortHandler(columnSortHandler);
+        this.purchases.getColumnSortList().push(dateColumn);
     }
 
-    private void setUpDataProvider(final ArrayList<Purchase> values) {
+    private void setUpDataProvider(final ShoppingServiceAsync shoppingService, final ExceptionHandler exceptionHandler) {
         AsyncDataProvider<Purchase> dataProvider = new AsyncDataProvider<Purchase>() {
 
             @Override
             protected void onRangeChanged(HasData<Purchase> display) {
                 final Range range = display.getVisibleRange();
-                int start = range.getStart();
-                int end = start + range.getLength();
+                ColumnSortList.ColumnSortInfo columnSortInfo = ListPurchases.this.purchases.getColumnSortList().get(0);
 
-                final ColumnSortList sortList = ListPurchases.this.purchases.getColumnSortList();
+                shoppingService.loadPurchases(range, columnSortInfo.getColumn().getDataStoreName(), columnSortInfo.isAscending(), new AsyncCallback<List<Purchase>>() {
+                    @Override
+                    public void onFailure(Throwable caught) {
+                        exceptionHandler.handleException("Konnte die Einkäufe nicht laden!", caught);
+                    }
 
-                ArrayList<Purchase> data = new ArrayList<Purchase>(end - start);
-                for (int i = start; i < end && values.size()>i;i++){
-                    data.add(values.get(i));
-                }
+                    @Override
+                    public void onSuccess(List<Purchase> result) {
+                        ListPurchases.this.purchases.setRowData(range.getStart(), result);
+                        adaptRowCountIfApplicable(result);
+                    }
 
+                    private void adaptRowCountIfApplicable(List<Purchase> result) {
+                        boolean endOfDataReached = result.size() < range.getLength();
+                        int purchaseCount = range.getStart() + result.size();
+                        if (endOfDataReached || purchaseCount > ListPurchases.this.purchases.getRowCount()) {
+                            ListPurchases.this.purchases.setRowCount(purchaseCount, endOfDataReached);
+                        }
+                    }
 
-                ListPurchases.this.purchases.setRowData(start, data);
-                ListPurchases.this.purchases.setRowCount(values.size());
+                });
+
             }
         };
         dataProvider.addDataDisplay(this.purchases);
