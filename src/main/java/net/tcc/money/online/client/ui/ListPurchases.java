@@ -78,7 +78,7 @@ public class ListPurchases extends Composite {
                 final Range range = display.getVisibleRange();
                 ColumnSortList.ColumnSortInfo columnSortInfo = ListPurchases.this.purchases.getColumnSortList().get(0);
 
-                shoppingService.loadPurchases(range, columnSortInfo.getColumn().getDataStoreName(), columnSortInfo.isAscending(), new AsyncCallback<List<Purchase>>() {
+                shoppingService.loadPurchases(new Range(range.getStart(), range.getLength() +1), columnSortInfo.getColumn().getDataStoreName(), columnSortInfo.isAscending(), new AsyncCallback<List<Purchase>>() {
                     @Override
                     public void onFailure(Throwable caught) {
                         exceptionHandler.handleException("Konnte die Einkäufe nicht laden!", caught);
@@ -86,12 +86,19 @@ public class ListPurchases extends Composite {
 
                     @Override
                     public void onSuccess(List<Purchase> result) {
-                        ListPurchases.this.purchases.setRowData(range.getStart(), result);
                         adaptRowCountIfApplicable(result);
+                        ListPurchases.this.purchases.setRowData(range.getStart(), cutResultIfNecessary(result));
+                    }
+
+                    private List<Purchase> cutResultIfNecessary(List<Purchase> result) {
+                        while (result.size()> range.getLength()){
+                            result.remove(result.size()-1);
+                        }
+                        return result;
                     }
 
                     private void adaptRowCountIfApplicable(List<Purchase> result) {
-                        boolean endOfDataReached = result.size() < range.getLength();
+                        boolean endOfDataReached = result.size() <= range.getLength();
                         int purchaseCount = range.getStart() + result.size();
                         if (endOfDataReached || purchaseCount > ListPurchases.this.purchases.getRowCount()) {
                             ListPurchases.this.purchases.setRowCount(purchaseCount, endOfDataReached);
