@@ -8,4 +8,8 @@
         <property name="dataSetId" direction="asc"/>
         <property name="purchaseDate" direction="desc"/>
     </datastore-index>
+    <datastore-index kind="PersistentPurchase" ancestor="false">
+        <property name="dataSetId" direction="asc"/>
+        <property name="purchaseDate" direction="asc"/>
+    </datastore-index>
 </datastore-indexes>
