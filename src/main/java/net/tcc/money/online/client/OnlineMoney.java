@@ -85,18 +85,7 @@ public class OnlineMoney implements EntryPoint, ExceptionHandler {
 	}
 
 	protected void listPurchases() {
-		setContent(new Label("Einkäufe werden geladen..."));
-		shoppingService.loadPurchases(new AsyncCallback<Iterable<Purchase>>() {
-			@Override
-			public void onSuccess(Iterable<Purchase> result) {
-				setContent(new ListPurchases(result));
-			}
-
-			@Override
-			public void onFailure(Throwable caught) {
-				handleException("Konnte die Einkäufe nicht laden!", caught);
-			}
-		});
+		setContent(new ListPurchases(this.shoppingService, this));
 	}
 
 	private void startEnteringPurchasings(final Purchase purchase) {
@@ -138,7 +127,7 @@ public class OnlineMoney implements EntryPoint, ExceptionHandler {
 
 	@Override
 	public void handleException(String message, Throwable caught) {
-		StringBuffer buffy = new StringBuffer(message);
+		StringBuilder buffy = new StringBuilder(message);
 		buffy.append("<br/>");
 		buffy.append(caught);
 		for (StackTraceElement ste : caught.getStackTrace()) {
