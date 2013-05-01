@@ -5,11 +5,7 @@ import java.math.BigDecimal;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.jdo.annotations.Extension;
-import javax.jdo.annotations.IdGeneratorStrategy;
-import javax.jdo.annotations.PersistenceCapable;
-import javax.jdo.annotations.Persistent;
-import javax.jdo.annotations.PrimaryKey;
+import javax.jdo.annotations.*;
 
 import com.google.appengine.repackaged.com.google.common.base.Function;
 import net.tcc.gae.AbstractEntity;
@@ -39,7 +35,7 @@ public class PersistentPurchasing extends AbstractEntity<String> implements Seri
 	private String key;
 
 	@Nonnull
-	@Persistent
+	@Persistent(nullValue = NullValue.EXCEPTION)
 	@Unowned
 	private PersistentArticle article;
 
@@ -48,7 +44,7 @@ public class PersistentPurchasing extends AbstractEntity<String> implements Seri
 	private BigDecimal quantity;
 
 	@Nonnull
-	@Persistent
+	@Persistent(nullValue = NullValue.EXCEPTION)
 	private BigDecimal price;
 
 	@Nullable

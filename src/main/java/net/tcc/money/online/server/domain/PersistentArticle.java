@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.jdo.annotations.NullValue;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 
@@ -27,7 +28,7 @@ public class PersistentArticle extends DataSetBoundEntity implements Serializabl
 	};
 
 	@Nonnull
-	@Persistent
+	@Persistent(nullValue = NullValue.EXCEPTION)
 	private String name;
 
 	@Nullable

@@ -3,6 +3,7 @@ package net.tcc.money.online.server.domain;
 import java.io.Serializable;
 
 import javax.annotation.Nonnull;
+import javax.jdo.annotations.NullValue;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 
@@ -23,7 +24,7 @@ public class PersistentShop extends DataSetBoundEntity implements Serializable {
 		}
 	};
 
-	@Persistent
+	@Persistent(nullValue = NullValue.EXCEPTION)
 	private String name;
 
 	@Deprecated

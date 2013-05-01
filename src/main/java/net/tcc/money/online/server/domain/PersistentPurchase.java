@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nonnull;
+import javax.jdo.annotations.NullValue;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 
@@ -34,16 +35,16 @@ public class PersistentPurchase extends DataSetBoundEntity implements Serializab
 	};
 
 	@Nonnull
-	@Persistent
+	@Persistent(nullValue = NullValue.EXCEPTION)
 	@Unowned
 	private PersistentShop shop;
 
 	@Nonnull
-	@Persistent
+	@Persistent(nullValue = NullValue.EXCEPTION)
 	private Date purchaseDate;
 
 	@Nonnull
-	@Persistent
+	@Persistent(nullValue = NullValue.EXCEPTION)
 	private List<PersistentPurchasing> purchasings = new ArrayList<PersistentPurchasing>();
 
 	@Deprecated
