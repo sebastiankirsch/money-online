@@ -1,12 +1,15 @@
 package net.tcc.money.online.server.worker;
 
+import com.google.appengine.repackaged.com.google.common.base.Function;
 import com.google.appengine.repackaged.com.google.common.base.StringUtil;
 import com.google.appengine.repackaged.com.google.common.collect.Iterables;
+import com.google.appengine.repackaged.com.google.common.collect.Ordering;
 import net.tcc.gae.ServerTools.PersistenceTemplate;
 import net.tcc.money.online.server.domain.PersistentPrice;
 import net.tcc.money.online.server.domain.PersistentPurchase;
 import net.tcc.money.online.server.domain.PersistentPurchasing;
 
+import javax.annotation.Nullable;
 import javax.jdo.JDOObjectNotFoundException;
 import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
@@ -30,6 +33,14 @@ import static net.tcc.gae.ServerTools.startTransaction;
 public class PricesWorker extends HttpServlet {
 
     private static final Logger LOG = Logger.getLogger(PricesWorker.class.getName());
+
+    static final Function<PersistentPrice, Date> SINCE = new Function<PersistentPrice, Date>() {
+        @Nullable
+        @Override
+        public Date apply(@Nullable PersistentPrice price) {
+            return price == null ? null : price.getSince();
+        }
+    };
 
     public static final String PURCHASE_ID = "purchaseId";
 
@@ -72,6 +83,13 @@ public class PricesWorker extends HttpServlet {
                         persistenceManager.makePersistent(price);
                         tx.commit();
                         continue;
+                    }
+                    while (existingPrices.size() > 1) {
+                        PersistentPrice oldestPrice = Iterables.getOnlyElement(Ordering.natural().nullsFirst().onResultOf(SINCE).leastOf(existingPrices, 1));
+                        existingPrices.remove(oldestPrice);
+                        persistenceManager.deletePersistent(oldestPrice);
+                        tx.commit();
+                        tx = startTransaction(persistenceManager);
                     }
                     PersistentPrice existingPrice = Iterables.getOnlyElement(existingPrices);
                     boolean priceHasNotChanged = existingPrice.getPrice().equals(price.getPrice());
