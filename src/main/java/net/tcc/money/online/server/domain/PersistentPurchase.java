@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.jdo.annotations.NullValue;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
@@ -27,9 +28,9 @@ public class PersistentPurchase extends DataSetBoundEntity implements Serializab
 	private static final long serialVersionUID = Constants.SERIAL_VERSION;
 
 	public static final Function<PersistentPurchase, Purchase> toPurchase = new Function<PersistentPurchase, Purchase>() {
-		@Nonnull
+		@Nullable
 		@Override
-		public Purchase apply(@Nonnull PersistentPurchase purchase) {
+		public Purchase apply(@Nullable PersistentPurchase purchase) {
 			return purchase == null ? null : purchase.toPurchase();
 		}
 	};
@@ -45,10 +46,10 @@ public class PersistentPurchase extends DataSetBoundEntity implements Serializab
 
 	@Nonnull
 	@Persistent(nullValue = NullValue.EXCEPTION)
-	private List<PersistentPurchasing> purchasings = new ArrayList<PersistentPurchasing>();
+	private List<PersistentPurchasing> purchasings = new ArrayList<>();
 
 	@Deprecated
-	@SuppressWarnings("unused")
+	@SuppressWarnings({"deprecation", "unused"})
 	private PersistentPurchase() { // for JDO
 		super();
 	}
@@ -72,5 +73,15 @@ public class PersistentPurchase extends DataSetBoundEntity implements Serializab
 		purchase.addAll(transform(this, toPurchasing));
 		return purchase;
 	}
+
+    @Nonnull
+    public PersistentShop getShop() {
+        return this.shop;
+    }
+
+    @Nonnull
+    public Date getPurchaseDate() {
+        return purchaseDate;
+    }
 
 }

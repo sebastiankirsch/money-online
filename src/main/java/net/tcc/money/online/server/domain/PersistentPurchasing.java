@@ -77,4 +77,19 @@ public class PersistentPurchasing extends AbstractEntity<String> implements Seri
         return this.key;
     }
 
+    @Nonnull
+    public PersistentArticle getArticle() {
+        return article;
+    }
+
+    @Nullable
+    public BigDecimal getQuantity() {
+        return quantity;
+    }
+
+    @Nonnull
+    public BigDecimal getPrice() {
+        return price;
+    }
+
 }

@@ -15,7 +15,7 @@ public abstract class ServerSideTest {
     protected ServerSideTest(boolean withLoggedInUser) {
         localServices = new LocalServiceTestHelper(
                 new LocalUserServiceTestConfig(),
-                new LocalDatastoreServiceTestConfig().setDefaultHighRepJobPolicyUnappliedJobPercentage(100));
+                new LocalDatastoreServiceTestConfig());
         if (withLoggedInUser) {
             localServices.setEnvIsLoggedIn(true)
                     .setEnvAuthDomain("tcc.net")
@@ -37,4 +37,5 @@ public abstract class ServerSideTest {
     public final void tearDownLocalServices() {
         this.localServices.tearDown();
     }
+
 }
