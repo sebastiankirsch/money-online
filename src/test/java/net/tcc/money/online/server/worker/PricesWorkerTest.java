@@ -131,17 +131,16 @@ public final class PricesWorkerTest extends ServerSideTest {
         return executeWithoutTransaction(new PersistenceTemplate<PersistentPurchase>() {
             @Override
             public PersistentPurchase doWithPersistenceManager(PersistenceManager persistenceManager) {
-                String dataSetId = "JUnit";
                 Transaction tx = startTransaction(persistenceManager);
-                PersistentShop shop = new PersistentShop(dataSetId, "Shop");
+                PersistentShop shop = new PersistentShop(DATA_SET_ID, "Shop");
                 persistenceManager.makePersistent(shop);
                 tx.commit();
                 tx = startTransaction(persistenceManager);
-                PersistentArticle article = new PersistentArticle(dataSetId, "Article", null, false, null);
+                PersistentArticle article = new PersistentArticle(DATA_SET_ID, "Article", null, false, null);
                 persistenceManager.makePersistent(article);
                 tx.commit();
                 tx = startTransaction(persistenceManager);
-                PersistentPurchase purchase = new PersistentPurchase(dataSetId, shop, new Date(), asList(new PersistentPurchasing(article, ONE, price, null)));
+                PersistentPurchase purchase = new PersistentPurchase(DATA_SET_ID, shop, new Date(), asList(new PersistentPurchasing(article, ONE, price, null)));
                 purchase = persistenceManager.makePersistent(purchase);
                 tx.commit();
 

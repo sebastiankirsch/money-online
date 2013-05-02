@@ -7,44 +7,40 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 
 public class Purchasing implements IsSerializable {
 
-	private Article article;
+    private Article article;
 
-	private BigDecimal quantity;
+    private BigDecimal quantity;
 
-	private BigDecimal price;
+    private BigDecimal price;
 
-	private Category category;
-	
-	@SuppressWarnings("unused")
-	private Purchasing(){
-		// for GWT
-	}
+    private Category category;
 
-	public Purchasing(Article article, BigDecimal quantity, BigDecimal price, Category category) {
-		this.article = article;
-		this.quantity = quantity.setScale(3, RoundingMode.HALF_UP);
-		this.price = price.setScale(2, RoundingMode.HALF_UP);
-		this.category = category;
-	}
+    @SuppressWarnings("unused")
+    private Purchasing() {
+        // for GWT
+    }
 
-	public Article getArticle() {
-		return article;
-	}
+    public Purchasing(Article article, BigDecimal quantity, BigDecimal price, Category category) {
+        this.article = article;
+        this.quantity = quantity == null ? null : quantity.setScale(3, RoundingMode.HALF_UP);
+        this.price = price.setScale(2, RoundingMode.HALF_UP);
+        this.category = category;
+    }
 
-	public Category getCategory() {
-		return category;
-	}
+    public Article getArticle() {
+        return article;
+    }
 
-	public BigDecimal getPrice() {
-		return price;
-	}
+    public Category getCategory() {
+        return category;
+    }
 
-	public BigDecimal getQuantity() {
-		return quantity;
-	}
+    public BigDecimal getPrice() {
+        return price;
+    }
 
-	public void setArticle(Article article) {
-		this.article = article;
-	}
+    public BigDecimal getQuantity() {
+        return quantity;
+    }
 
 }

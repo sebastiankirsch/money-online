@@ -1,0 +1,13 @@
+<queue-entries>
+    <total-storage-limit>50M</total-storage-limit>
+    <queue>
+        <name>prices</name>
+        <!-- This is the queue responsible for updating the prices of a shop -->
+        <mode>push</mode>
+        <bucket-size>16</bucket-size>
+        <rate>1/s</rate>
+        <retry-parameters>
+            <task-age-limit>7d</task-age-limit>
+        </retry-parameters>
+    </queue>
+</queue-entries>

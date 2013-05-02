@@ -19,10 +19,18 @@
         <servlet-name>shoppingService</servlet-name>
         <servlet-class>net.tcc.money.online.server.ShoppingServiceImpl</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>pricesWorker</servlet-name>
+        <servlet-class>net.tcc.money.online.server.worker.PricesWorker</servlet-class>
+    </servlet>
 
     <servlet-mapping>
         <servlet-name>shoppingService</servlet-name>
         <url-pattern>/online_money/shoppingService</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>pricesWorker</servlet-name>
+        <url-pattern>/worker/prices</url-pattern>
     </servlet-mapping>
 
     <!-- Default page to serve -->
@@ -35,7 +43,7 @@
         <servlet-class>com.google.api.server.spi.SystemServiceServlet</servlet-class>
         <init-param>
             <param-name>services</param-name>
-            <param-value />
+            <param-value/>
         </init-param>
     </servlet>
 

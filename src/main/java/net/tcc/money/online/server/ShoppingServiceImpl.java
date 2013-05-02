@@ -1,5 +1,6 @@
 package net.tcc.money.online.server;
 
+import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.appengine.repackaged.com.google.common.base.Function;
@@ -21,6 +22,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.google.appengine.api.taskqueue.TaskOptions.Builder.withUrl;
+import static com.google.appengine.api.taskqueue.TaskOptions.Method.POST;
 import static com.google.appengine.repackaged.com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.appengine.repackaged.com.google.common.collect.Iterables.transform;
 import static com.google.appengine.repackaged.com.google.common.collect.Lists.newArrayList;
@@ -29,6 +32,7 @@ import static net.tcc.money.online.server.domain.PersistentArticle.toArticle;
 import static net.tcc.money.online.server.domain.PersistentCategory.toCategory;
 import static net.tcc.money.online.server.domain.PersistentPurchase.toPurchase;
 import static net.tcc.money.online.server.domain.PersistentShop.toShop;
+import static net.tcc.money.online.server.worker.PricesWorker.PURCHASE_ID;
 
 public class ShoppingServiceImpl extends RemoteServiceServlet implements ShoppingService {
 
@@ -182,6 +186,8 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
             PersistentPurchase entity = toPersistentPurchase(purchase, pm);
             Transaction tx = startTransaction(pm);
             pm.makePersistent(entity);
+            pm.flush();
+            QueueFactory.getQueue("prices").add(withUrl("/worker/prices").method(POST).param(PURCHASE_ID, String.valueOf(entity.getKey())));
             tx.commit();
         } finally {
             close(pm);
