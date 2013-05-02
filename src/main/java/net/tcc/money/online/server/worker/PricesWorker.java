@@ -1,6 +1,7 @@
 package net.tcc.money.online.server.worker;
 
 import com.google.appengine.repackaged.com.google.common.base.StringUtil;
+import com.google.appengine.repackaged.com.google.common.collect.Iterables;
 import net.tcc.gae.ServerTools.PersistenceTemplate;
 import net.tcc.money.online.server.domain.PersistentPrice;
 import net.tcc.money.online.server.domain.PersistentPurchase;
@@ -8,6 +9,7 @@ import net.tcc.money.online.server.domain.PersistentPurchasing;
 
 import javax.jdo.JDOObjectNotFoundException;
 import javax.jdo.PersistenceManager;
+import javax.jdo.Query;
 import javax.jdo.Transaction;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -16,6 +18,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,8 +56,40 @@ public class PricesWorker extends HttpServlet {
 
     void calculateAndStorePricesForPurchase(final long purchaseId) {
         executeWithoutTransaction(new PersistenceTemplate<Collection<PersistentPrice>>() {
+
             @Override
             public Collection<PersistentPrice> doWithPersistenceManager(PersistenceManager persistenceManager) {
+                PersistentPurchase purchase = fetchPurchase(persistenceManager);
+                ArrayList<PersistentPrice> prices = calculatePricesOf(purchase);
+
+                Query query = persistenceManager.newQuery(PersistentPrice.class, "shop == pShop && article == pArticle");
+                query.declareParameters("net.tcc.money.online.server.domain.PersistentShop pShop, net.tcc.money.online.server.domain.PersistentArticle pArticle");
+                for (PersistentPrice price : prices) {
+                    Transaction tx = startTransaction(persistenceManager);
+                    @SuppressWarnings("unchecked")
+                    List<PersistentPrice> existingPrices = (List<PersistentPrice>) query.execute(price.getShop(), price.getArticle());
+                    if (existingPrices.isEmpty()) {
+                        persistenceManager.makePersistent(price);
+                        tx.commit();
+                        continue;
+                    }
+                    PersistentPrice existingPrice = Iterables.getOnlyElement(existingPrices);
+                    boolean priceHasNotChanged = existingPrice.getPrice().equals(price.getPrice());
+                    boolean existingPriceIsNewerThanNewPrice = existingPrice.getSince().compareTo(price.getSince()) > 0;
+                    if (priceHasNotChanged || existingPriceIsNewerThanNewPrice) {
+                        continue;
+                    }
+                    existingPrice.setSince(new Date(price.getSince().getTime()));
+                    existingPrice.setPrice(price.getPrice());
+                    persistenceManager.makePersistent(existingPrice);
+
+                    tx.commit();
+                }
+
+                return null;
+            }
+
+            private PersistentPurchase fetchPurchase(PersistenceManager persistenceManager) {
                 String fetchGroupName = "priceCalculation";
                 persistenceManager.getFetchGroup(PersistentPurchase.class, fetchGroupName).addMember("shop").addMember("purchasings");
                 persistenceManager.getFetchGroup(PersistentPurchasing.class, fetchGroupName).addMember("article");
@@ -65,7 +101,10 @@ public class PricesWorker extends HttpServlet {
                     LOG.warning("Purchase #" + purchaseId + " wasn't found. Maybe data is not yet consistent.");
                     throw oNFE;
                 }
+                return purchase;
+            }
 
+            private ArrayList<PersistentPrice> calculatePricesOf(PersistentPurchase purchase) {
                 ArrayList<PersistentPrice> prices = newArrayList();
                 for (PersistentPurchasing purchasing : purchase) {
                     BigDecimal quantity = purchasing.getQuantity();
@@ -79,11 +118,9 @@ public class PricesWorker extends HttpServlet {
                         LOG.fine("Storing " + price);
                     }
                 }
-                Transaction tx = startTransaction(persistenceManager);
-                Collection<PersistentPrice> persistentPrices = persistenceManager.makePersistentAll(prices);
-                tx.commit();
-                return persistentPrices;
+                return prices;
             }
+
         });
     }
 

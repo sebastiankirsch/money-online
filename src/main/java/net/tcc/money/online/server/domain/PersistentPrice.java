@@ -63,4 +63,32 @@ public class PersistentPrice extends AbstractEntity<Long> implements Serializabl
         return this.key;
     }
 
+    @Nonnull
+    public PersistentShop getShop() {
+        return shop;
+    }
+
+    @Nonnull
+    public PersistentArticle getArticle() {
+        return article;
+    }
+
+    @Nonnull
+    public Date getSince() {
+        return since;
+    }
+
+    public void setSince(@Nonnull Date since) {
+        this.since = since;
+    }
+
+    @Nonnull
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(@Nonnull BigDecimal price) {
+        this.price = price;
+    }
+
 }
