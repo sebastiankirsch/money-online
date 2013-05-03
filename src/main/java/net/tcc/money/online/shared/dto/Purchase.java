@@ -14,7 +14,8 @@ public class Purchase implements IsSerializable, Iterable<Purchasing> {
 
     private Date purchaseDate;
 
-    private List<Purchasing> purchasings = new ArrayList<>();
+    @SuppressWarnings("Convert2Diamond")
+    private List<Purchasing> purchasings = new ArrayList<Purchasing>();
 
     @Deprecated
     @SuppressWarnings("unused")
