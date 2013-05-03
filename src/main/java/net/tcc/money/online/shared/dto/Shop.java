@@ -2,25 +2,25 @@ package net.tcc.money.online.shared.dto;
 
 import com.google.gwt.user.client.rpc.IsSerializable;
 
-public class Shop implements IsSerializable {
-
-	private long key;
+public class Shop extends DtoWithLongKey implements IsSerializable {
 
 	private String name;
 
-	@SuppressWarnings("unused")
-	private Shop() { // for GWT
-		super();
+    @Deprecated
+	@SuppressWarnings({"deprecation", "unused"})
+	private Shop() {
+       super();
 	}
 
 	public Shop(long key, String name) {
-		this.key = key;
+		super(key);
 		this.name = name;
 	}
 
-	public long getKey() {
-		return key;
-	}
+    @Override
+    public String toString(){
+        return super.toString() + " [" + getName() + "]";
+    }
 
 	public String getName() {
 		return this.name;

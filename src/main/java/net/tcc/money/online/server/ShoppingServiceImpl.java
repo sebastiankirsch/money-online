@@ -27,6 +27,7 @@ import static com.google.appengine.api.taskqueue.TaskOptions.Method.POST;
 import static com.google.appengine.repackaged.com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.appengine.repackaged.com.google.common.collect.Iterables.transform;
 import static com.google.appengine.repackaged.com.google.common.collect.Lists.newArrayList;
+import static java.lang.System.currentTimeMillis;
 import static net.tcc.gae.ServerTools.*;
 import static net.tcc.money.online.server.domain.PersistentArticle.toArticle;
 import static net.tcc.money.online.server.domain.PersistentCategory.toCategory;
@@ -103,13 +104,18 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
     @Nonnull
     @Override
     public Shop createShop(@Nonnull final String name) {
+        long start = currentTimeMillis();
         final String dataSetId = getDataSetId();
-        return executeWithTransaction(new PersistenceTemplate<PersistentShop>() {
+        Shop shop = executeWithTransaction(new PersistenceTemplate<PersistentShop>() {
             @Override
             public PersistentShop doWithPersistenceManager(PersistenceManager pm) {
                 return pm.makePersistent(new PersistentShop(dataSetId, name));
             }
         }).toShop();
+        if (LOG.isLoggable(Level.INFO)) {
+            LOG.info(start + "ms to persist " + shop);
+        }
+        return shop;
     }
 
     @Nonnull
