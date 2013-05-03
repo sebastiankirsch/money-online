@@ -17,61 +17,60 @@ import com.google.appengine.datanucleus.annotations.Unowned;
 @PersistenceCapable
 public class PersistentCategory extends DataSetBoundEntity implements Serializable {
 
-	private static final long serialVersionUID = Constants.SERIAL_VERSION;
+    private static final long serialVersionUID = Constants.SERIAL_VERSION;
 
-	public static final Function<PersistentCategory, Category> toCategory = new Function<PersistentCategory, Category>() {
-		@Nonnull
-		@Override
-		public Category apply(@Nonnull PersistentCategory category) {
-			return category.toCategory();
-		}
-	};
+    public static final Function<PersistentCategory, Category> toCategory = new Function<PersistentCategory, Category>() {
+        @Nullable
+        @Override
+        public Category apply(@Nullable PersistentCategory category) {
+            return category == null ? null : category.toCategory();
+        }
+    };
 
-	@Nonnull
-	@Persistent(nullValue = NullValue.EXCEPTION)
-	private String name;
+    @Nonnull
+    @Persistent(nullValue = NullValue.EXCEPTION)
+    private String name;
 
-	@Nullable
-	@Persistent
-	@Unowned
-	private PersistentCategory parent;
+    @Nullable
+    @Persistent
+    @Unowned
+    private PersistentCategory parent;
 
-	@Deprecated
-	@SuppressWarnings("unused")
-	private PersistentCategory() {// for JDO
-		super();
-	}
+    @Deprecated
+    @SuppressWarnings({"deprecation", "unused"})
+    private PersistentCategory() {// for JDO
+        super();
+    }
 
-	public PersistentCategory(@Nonnull String dataSetId, @Nonnull String name, @Nullable PersistentCategory parent) {
-		super(dataSetId);
-		this.name = name;
-		this.parent = parent;
-	}
+    public PersistentCategory(@Nonnull String dataSetId, @Nonnull String name, @Nullable PersistentCategory parent) {
+        super(dataSetId);
+        this.name = name;
+        this.parent = parent;
+    }
 
-	@Override
-	public String toString() {
-		return getClass().getSimpleName() + "#" + getKey() + " [" + this.name + "]";
-	}
+    @Override
+    public String toString() {
+        return super.toString() + " [" + this.name + "]";
+    }
 
-	@Nonnull
-	public Category toCategory() {
-		return new Category(getKey(), this.name, this.parent == null ? null : this.parent.toCategory());
-	}
+    @Nonnull
+    public Category toCategory() {
+        return new Category(getKey(), this.name, this.parent == null ? null : this.parent.toCategory());
+    }
 
-	public void setParent(@Nullable PersistentCategory parent) {
-		if (parent != null) {
-			if (equals(parent) || parent.isChildOf(this))
-				throw new IllegalArgumentException("Cannot set a child of this category as a parent!");
-		}
-		this.parent = parent;
-	}
+    public void setParent(@Nullable PersistentCategory parent) {
+        if (parent != null) {
+            if (equals(parent) || parent.isChildOf(this))
+                throw new IllegalArgumentException("Cannot set a child of this category as a parent!");
+        }
+        this.parent = parent;
+    }
 
-	private boolean isChildOf(@Nullable PersistentCategory category) {
-		if (parent == null)
-			return false;
-		if (parent.equals(category))
-			return true;
-		return parent.isChildOf(category);
-	}
+    @SuppressWarnings("SimplifiableIfStatement")
+    private boolean isChildOf(@Nullable PersistentCategory category) {
+        if (parent == null)
+            return false;
+        return parent.equals(category) || parent.isChildOf(category);
+    }
 
 }

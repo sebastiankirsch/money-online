@@ -10,50 +10,56 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 
 public class Purchase implements IsSerializable, Iterable<Purchasing> {
 
-	private Shop shop;
+    private Shop shop;
 
-	private Date purchaseDate;
+    private Date purchaseDate;
 
-	private List<Purchasing> purchasings = new ArrayList<Purchasing>();
+    private List<Purchasing> purchasings = new ArrayList<>();
 
-	@SuppressWarnings("unused")
-	private Purchase() {
-		// for GWT
-	}
+    @Deprecated
+    @SuppressWarnings("unused")
+    private Purchase() {
+        // for GWT
+    }
 
-	public Purchase(Shop shop, Date purchaseDate) {
-		this.shop = shop;
-		this.purchaseDate = new Date(purchaseDate.getTime());
-	}
+    public Purchase(Shop shop, Date purchaseDate) {
+        this.shop = shop;
+        this.purchaseDate = new Date(purchaseDate.getTime());
+    }
 
-	@Override
-	public Iterator<Purchasing> iterator() {
-		return this.purchasings.iterator();
-	}
+    @Override
+    public String toString() {
+        return "Purchase @" + shop.getName();
+    }
 
-	public void add(Purchasing purchasing) {
-		this.purchasings.add(purchasing);
-	}
+    @Override
+    public Iterator<Purchasing> iterator() {
+        return this.purchasings.iterator();
+    }
 
-	public void addAll(Iterable<Purchasing> purchasings) {
-		for (Purchasing purchasing : purchasings)
-			add(purchasing);
-	}
+    public void add(Purchasing purchasing) {
+        this.purchasings.add(purchasing);
+    }
 
-	public Shop getShop() {
-		return shop;
-	}
+    public void addAll(Iterable<Purchasing> purchasings) {
+        for (Purchasing purchasing : purchasings)
+            add(purchasing);
+    }
 
-	public Date getPurchaseDate() {
-		return purchaseDate;
-	}
+    public Shop getShop() {
+        return shop;
+    }
 
-	public BigDecimal getTotal() {
-		BigDecimal sum = BigDecimal.ZERO;
-		for (Purchasing purchasing : this) {
-			sum = sum.add(purchasing.getPrice());
-		}
-		return sum;
-	}
+    public Date getPurchaseDate() {
+        return purchaseDate;
+    }
+
+    public BigDecimal getTotal() {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (Purchasing purchasing : this) {
+            sum = sum.add(purchasing.getPrice());
+        }
+        return sum;
+    }
 
 }

@@ -113,7 +113,7 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
             }
         }).toShop();
         if (LOG.isLoggable(Level.INFO)) {
-            LOG.info(start + "ms to persist " + shop);
+            LOG.info((currentTimeMillis() - start) + "ms to persist " + shop);
         }
         return shop;
     }
@@ -137,7 +137,7 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
             }
         }).toCategory();
         if (LOG.isLoggable(Level.INFO)) {
-            LOG.info(start + "ms to persist " + category);
+            LOG.info((currentTimeMillis() - start) + "ms to persist " + category);
         }
         return category;
     }
@@ -145,7 +145,8 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
     @Nonnull
     @Override
     public Category setParentFor(@Nonnull final Category plainCategory, @Nullable final Category plainParent) {
-        return executeWithoutTransaction(new PersistenceTemplate<Category>() {
+        long start = currentTimeMillis();
+        Category category = executeWithoutTransaction(new PersistenceTemplate<Category>() {
             @Override
             public Category doWithPersistenceManager(PersistenceManager pm) {
                 PersistentCategory category = pm.getObjectById(PersistentCategory.class, plainCategory.getKey());
@@ -164,12 +165,17 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
                 }
             }
         });
+        if (LOG.isLoggable(Level.INFO)) {
+            LOG.info((currentTimeMillis() - start) + "ms to update " + category);
+        }
+        return category;
     }
 
     @Nonnull
     @Override
     public Article setCategoryFor(@Nonnull final Article plainArticle, @Nullable final Category plainCategory) {
-        return executeWithoutTransaction(new PersistenceTemplate<Article>() {
+        long start = currentTimeMillis();
+        Article article = executeWithoutTransaction(new PersistenceTemplate<Article>() {
             @Override
             public Article doWithPersistenceManager(PersistenceManager pm) {
                 PersistentArticle article = pm.getObjectById(PersistentArticle.class, plainArticle.getKey());
@@ -188,20 +194,29 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
                 }
             }
         });
+        if (LOG.isLoggable(Level.INFO)) {
+            LOG.info((currentTimeMillis() - start) + "ms to update " + article);
+        }
+        return article;
     }
 
     @Override
     public void createPurchase(@Nonnull Purchase purchase) {
+        long start = currentTimeMillis();
         PersistenceManager pm = getPersistenceManager();
+        PersistentPurchase persistentPurchase;
         try {
-            PersistentPurchase entity = toPersistentPurchase(purchase, pm);
+            persistentPurchase = toPersistentPurchase(purchase, pm);
             Transaction tx = startTransaction(pm);
-            pm.makePersistent(entity);
+            persistentPurchase = pm.makePersistent(persistentPurchase);
             pm.flush();
-            QueueFactory.getQueue("prices").add(withUrl("/worker/prices").method(POST).param(PURCHASE_ID, String.valueOf(entity.getKey())));
+            QueueFactory.getQueue("prices").add(withUrl("/worker/prices").method(POST).param(PURCHASE_ID, String.valueOf(persistentPurchase.getKey())));
             tx.commit();
         } finally {
             close(pm);
+        }
+        if (LOG.isLoggable(Level.INFO)) {
+            LOG.info((currentTimeMillis() - start) + "ms to persist " + persistentPurchase.toPurchase());
         }
     }
 
@@ -253,11 +268,11 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
             if (persistedArticle == null) {
                 persistedArticle = new PersistentArticle(dataSetId, article.getName(), article.getBrand(),
                         article.isVegan(), article.getLotSize());
-                if (LOG.isLoggable(Level.INFO)) {
-                    LOG.info("Persisting " + persistedArticle);
-                }
                 persistedArticle = pm.makePersistent(persistedArticle);
                 tx.commit();
+                if (LOG.isLoggable(Level.INFO)) {
+                    LOG.info("Persisted " + persistedArticle);
+                }
             } else {
                 if (LOG.isLoggable(Level.FINE)) {
                     LOG.fine("Loaded " + persistedArticle);
@@ -276,7 +291,11 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
         }
         Transaction tx = startTransaction(pm);
         try {
-            return pm.getObjectById(PersistentCategory.class, category.getKey());
+            PersistentCategory persistentCategory = pm.getObjectById(PersistentCategory.class, category.getKey());
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine("Loaded " + persistentCategory);
+            }
+            return persistentCategory;
         } finally {
             tx.rollback();
         }

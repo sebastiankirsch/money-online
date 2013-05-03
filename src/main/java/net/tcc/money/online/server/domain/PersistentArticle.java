@@ -17,66 +17,66 @@ import com.google.appengine.datanucleus.annotations.Unowned;
 @PersistenceCapable
 public class PersistentArticle extends DataSetBoundEntity implements Serializable {
 
-	private static final long serialVersionUID = Constants.SERIAL_VERSION;
+    private static final long serialVersionUID = Constants.SERIAL_VERSION;
 
-	public static final Function<PersistentArticle, Article> toArticle = new Function<PersistentArticle, Article>() {
-		@Nonnull
-		@Override
-		public Article apply(@Nonnull PersistentArticle article) {
-			return article == null ? null : article.toArticle();
-		}
-	};
+    public static final Function<PersistentArticle, Article> toArticle = new Function<PersistentArticle, Article>() {
+        @Nullable
+        @Override
+        public Article apply(@Nullable PersistentArticle article) {
+            return article == null ? null : article.toArticle();
+        }
+    };
 
-	@Nonnull
-	@Persistent(nullValue = NullValue.EXCEPTION)
-	private String name;
+    @Nonnull
+    @Persistent(nullValue = NullValue.EXCEPTION)
+    private String name;
 
-	@Nullable
-	@Persistent
-	private String brand;
+    @Nullable
+    @Persistent
+    private String brand;
 
-	@Persistent
-	private boolean vegan;
+    @Persistent
+    private boolean vegan;
 
-	@Nullable
-	@Persistent
-	private String lotSize;
+    @Nullable
+    @Persistent
+    private String lotSize;
 
-	@Nullable
-	@Persistent
-	@Unowned
-	private PersistentCategory category;
+    @Nullable
+    @Persistent
+    @Unowned
+    private PersistentCategory category;
 
-	@Deprecated
-	@SuppressWarnings("unused")
-	private PersistentArticle() { // for JDO
-		super();
-	}
+    @Deprecated
+    @SuppressWarnings({"deprecation", "unused"})
+    private PersistentArticle() { // for JDO
+        super();
+    }
 
-	public PersistentArticle(@Nonnull String dataSetId, @Nonnull String name, @Nullable String brand, boolean vegan,
-			@Nullable String lotSize) {
-		super(dataSetId);
-		this.name = name;
-		this.brand = brand;
-		this.vegan = vegan;
-		this.lotSize = lotSize;
-	}
+    public PersistentArticle(@Nonnull String dataSetId, @Nonnull String name, @Nullable String brand, boolean vegan,
+                             @Nullable String lotSize) {
+        super(dataSetId);
+        this.name = name;
+        this.brand = brand;
+        this.vegan = vegan;
+        this.lotSize = lotSize;
+    }
 
-	@Override
-	public String toString() {
-		return getClass().getSimpleName() + "#" + getKey() + " [" + this.name + "/" + this.brand + "]";
-	}
+    @Override
+    public String toString() {
+        return super.toString() + " [" + this.name + "/" + this.brand + "]";
+    }
 
-	@Nonnull
-	public Article toArticle() {
-		Article article = new Article(getKey(), name, brand, vegan, lotSize);
-		PersistentCategory category = this.category;
-		article.setCategory(category == null ? null : category.toCategory());
-		return article;
-	}
+    @Nonnull
+    public Article toArticle() {
+        Article article = new Article(getKey(), name, brand, vegan, lotSize);
+        PersistentCategory category = this.category;
+        article.setCategory(category == null ? null : category.toCategory());
+        return article;
+    }
 
-	public void setCategory(@Nullable PersistentCategory category) {
-		this.category = category;
-	}
+    public void setCategory(@Nullable PersistentCategory category) {
+        this.category = category;
+    }
 
 }

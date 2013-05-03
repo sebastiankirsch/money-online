@@ -41,6 +41,11 @@ public abstract class DataSetBoundEntity extends AbstractEntity<Long> implements
 		this.dataSetId = dataSetId;
 	}
 
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "#" + this.key;
+    }
+
     @Nullable
     @Override
 	public Long getKey() {
