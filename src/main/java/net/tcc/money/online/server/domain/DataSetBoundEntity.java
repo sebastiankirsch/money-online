@@ -3,23 +3,16 @@ package net.tcc.money.online.server.domain;
 import net.tcc.gae.AbstractEntity;
 import net.tcc.money.online.shared.Constants;
 
-import java.io.Serializable;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.jdo.annotations.IdGeneratorStrategy;
-import javax.jdo.annotations.Inheritance;
-import javax.jdo.annotations.InheritanceStrategy;
-import javax.jdo.annotations.NullValue;
-import javax.jdo.annotations.PersistenceCapable;
-import javax.jdo.annotations.Persistent;
-import javax.jdo.annotations.PrimaryKey;
+import javax.jdo.annotations.*;
+import java.io.Serializable;
 
 @Inheritance(strategy = InheritanceStrategy.SUBCLASS_TABLE)
 @PersistenceCapable
 public abstract class DataSetBoundEntity extends AbstractEntity<Long> implements Serializable {
 
-	private static final long serialVersionUID = Constants.SERIAL_VERSION;
+    private static final long serialVersionUID = Constants.SERIAL_VERSION;
 
     @Nullable
     @Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
@@ -28,18 +21,18 @@ public abstract class DataSetBoundEntity extends AbstractEntity<Long> implements
     private Long key;
 
     @Nonnull
-	@Persistent(nullValue = NullValue.EXCEPTION)
+    @Persistent(nullValue = NullValue.EXCEPTION)
     @SuppressWarnings({"unused", "FieldCanBeLocal"}) // used in queries etc
-	private String dataSetId;
+    private String dataSetId;
 
-	@Deprecated
-	protected DataSetBoundEntity() { // for JDO
-		super();
-	}
+    @Deprecated
+    protected DataSetBoundEntity() { // for JDO
+        super();
+    }
 
-	protected DataSetBoundEntity(@Nonnull String dataSetId) {
-		this.dataSetId = dataSetId;
-	}
+    protected DataSetBoundEntity(@Nonnull String dataSetId) {
+        this.dataSetId = dataSetId;
+    }
 
     @Override
     public String toString() {
@@ -48,8 +41,16 @@ public abstract class DataSetBoundEntity extends AbstractEntity<Long> implements
 
     @Nullable
     @Override
-	public Long getKey() {
-		return key;
-	}
+    public Long getKey() {
+        return key;
+    }
+
+    @Nonnull
+    public Long getKeyOrThrow() throws IllegalStateException {
+        Long key = getKey();
+        if (key == null)
+            throw new IllegalStateException("No key is set!");
+        return key;
+    }
 
 }
