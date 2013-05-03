@@ -3,6 +3,10 @@
          version="2.5"
          xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
 
+    <system-properties>
+        <property name="java.util.logging.config.file" value="WEB-INF/logging.properties"/>
+    </system-properties>
+
     <security-constraint>
         <web-resource-collection>
             <url-pattern>/</url-pattern>
