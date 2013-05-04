@@ -5,10 +5,12 @@ import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.datanucleus.annotations.Unowned;
 import com.google.appengine.repackaged.com.google.common.base.Predicate;
 import net.tcc.gae.AbstractEntity;
+import net.tcc.money.online.shared.Constants;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.jdo.annotations.*;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
@@ -19,7 +21,19 @@ import static com.google.appengine.repackaged.com.google.common.collect.Iterable
 import static com.google.appengine.repackaged.com.google.common.collect.Iterables.getOnlyElement;
 
 @PersistenceCapable
-public class PersistentPrices extends AbstractEntity<Key> implements Iterable<PersistentPrice> {
+public class PersistentPrices extends AbstractEntity<Key> implements Iterable<PersistentPrice>, Serializable {
+
+    private static final long serialVersionUID = Constants.SERIAL_VERSION;
+
+    @Nonnull
+    private static Predicate<? super PersistentPrice> withArticle(@Nonnull final PersistentArticle article) {
+        return new Predicate<PersistentPrice>() {
+            @Override
+            public boolean apply(@Nullable PersistentPrice persistentPrice) {
+                return persistentPrice != null && article.equals(persistentPrice.getArticle());
+            }
+        };
+    }
 
     @Nonnull
     @Persistent
@@ -62,16 +76,6 @@ public class PersistentPrices extends AbstractEntity<Key> implements Iterable<Pe
     @Nullable
     public PersistentPrice getPriceFor(@Nonnull PersistentArticle article) {
         return getOnlyElement(filter(this.prices, withArticle(article)), null);
-    }
-
-    @Nonnull
-    private Predicate<? super PersistentPrice> withArticle(@Nonnull final PersistentArticle article) {
-        return new Predicate<PersistentPrice>() {
-            @Override
-            public boolean apply(@Nullable PersistentPrice persistentPrice) {
-                return persistentPrice != null && article.equals(persistentPrice.getArticle());
-            }
-        };
     }
 
     @Nonnull

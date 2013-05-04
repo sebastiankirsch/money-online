@@ -23,23 +23,19 @@ public class PersistentPrice extends AbstractEntity<Key> implements Serializable
     @Nonnull
     @PrimaryKey
     @Persistent
-    @SuppressWarnings("unused") // written by JDO
     private Key key;
 
     @Nonnull
     @Persistent(nullValue = NullValue.EXCEPTION)
-    @SuppressWarnings({"FieldCanBeLocal", "unused"})
     @Unowned
     private PersistentArticle article;
 
     @Nonnull
     @Persistent(nullValue = NullValue.EXCEPTION)
-    @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private Date since;
 
     @Nonnull
     @Persistent(nullValue = NullValue.EXCEPTION)
-    @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private BigDecimal price;
 
     @Deprecated
