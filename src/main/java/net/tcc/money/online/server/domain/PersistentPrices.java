@@ -53,6 +53,7 @@ public class PersistentPrices extends AbstractEntity<Key> implements Iterable<Pe
         return this.key;
     }
 
+    @Nonnull
     @Override
     public Iterator<PersistentPrice> iterator() {
         return this.prices.iterator();
@@ -73,7 +74,8 @@ public class PersistentPrices extends AbstractEntity<Key> implements Iterable<Pe
         };
     }
 
-    public PersistentPrice addPriceFor(PersistentArticle article, Date since, BigDecimal price) {
+    @Nonnull
+    public PersistentPrice addPriceFor(@Nonnull PersistentArticle article, @Nonnull Date since, @Nonnull BigDecimal price) {
         PersistentPrice persistentPrice = new PersistentPrice(getKey(), article, since, price);
         this.prices.add(persistentPrice);
         return persistentPrice;
