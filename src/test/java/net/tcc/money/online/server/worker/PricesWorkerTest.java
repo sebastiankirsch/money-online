@@ -189,9 +189,8 @@ public final class PricesWorkerTest extends ServerSideTest {
         PersistentPrices prices = new PersistentPrices(shop);
         Transaction tx = startTransaction(persistenceManager);
         prices = persistenceManager.makePersistent(prices);
-        tx.commit();
-        tx = startTransaction(persistenceManager);
-        prices.add(new PersistentPrice(article, since, price));
+        persistenceManager.flush();
+        prices.addPriceFor(article, since, price);
         persistenceManager.makePersistent(prices);
         tx.commit();
         return prices;

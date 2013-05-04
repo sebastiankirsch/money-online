@@ -1,12 +1,12 @@
 package net.tcc.money.online.server.domain;
 
 import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.datanucleus.annotations.Unowned;
 import net.tcc.gae.AbstractEntity;
 import net.tcc.money.online.shared.Constants;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.jdo.annotations.NullValue;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
@@ -20,7 +20,7 @@ public class PersistentPrice extends AbstractEntity<Key> implements Serializable
 
     private static final long serialVersionUID = Constants.SERIAL_VERSION;
 
-    @Nullable
+    @Nonnull
     @PrimaryKey
     @Persistent
     @SuppressWarnings("unused") // written by JDO
@@ -48,13 +48,14 @@ public class PersistentPrice extends AbstractEntity<Key> implements Serializable
         // for JDO
     }
 
-    public PersistentPrice(@Nonnull PersistentArticle article, @Nonnull Date since, @Nonnull BigDecimal price) {
+    PersistentPrice(@Nonnull Key parentKey, @Nonnull PersistentArticle article, @Nonnull Date since, @Nonnull BigDecimal price) {
+        this.key = KeyFactory.createKey(parentKey, getClass().getSimpleName(), article.getKeyOrThrow());
         this.article = article;
         this.since = since;
         this.price = price;
     }
 
-    @Nullable
+    @Nonnull
     @Override
     protected Key getKey() {
         return this.key;
@@ -83,7 +84,4 @@ public class PersistentPrice extends AbstractEntity<Key> implements Serializable
         this.price = price;
     }
 
-    public void setKey(@Nonnull Key key) {
-        this.key = key;
-    }
 }

@@ -9,7 +9,9 @@ import net.tcc.gae.AbstractEntity;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.jdo.annotations.*;
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -19,7 +21,7 @@ import static com.google.appengine.repackaged.com.google.common.collect.Iterable
 @PersistenceCapable
 public class PersistentPrices extends AbstractEntity<Key> implements Iterable<PersistentPrice> {
 
-    @Nullable
+    @Nonnull
     @Persistent
     @PrimaryKey
     private Key key;
@@ -45,7 +47,7 @@ public class PersistentPrices extends AbstractEntity<Key> implements Iterable<Pe
         this.shop = shop;
     }
 
-    @Nullable
+    @Nonnull
     @Override
     protected Key getKey() {
         return this.key;
@@ -71,13 +73,10 @@ public class PersistentPrices extends AbstractEntity<Key> implements Iterable<Pe
         };
     }
 
-    @Nonnull
-    public PersistentShop getShop() {
-        return shop;
+    public PersistentPrice addPriceFor(PersistentArticle article, Date since, BigDecimal price) {
+        PersistentPrice persistentPrice = new PersistentPrice(getKey(), article, since, price);
+        this.prices.add(persistentPrice);
+        return persistentPrice;
     }
 
-    public void add(@Nonnull PersistentPrice price) {
-        price.setKey(KeyFactory.createKey(getKey(), price.getClass().getSimpleName(), price.getArticle().getKeyOrThrow()));
-        this.prices.add(price);
-    }
 }

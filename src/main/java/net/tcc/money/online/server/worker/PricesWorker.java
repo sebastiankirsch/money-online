@@ -15,13 +15,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.google.appengine.repackaged.com.google.common.collect.Lists.newArrayList;
 import static net.tcc.gae.ServerTools.executeWithoutTransaction;
 import static net.tcc.gae.ServerTools.startTransaction;
 
@@ -58,31 +56,37 @@ public class PricesWorker extends HttpServlet {
             @Override
             public Collection<PersistentPrice> doWithPersistenceManager(PersistenceManager persistenceManager) {
                 PersistentPurchase purchase = fetchPurchase(persistenceManager);
-                ArrayList<PersistentPrice> prices = calculatePricesOf(purchase);
-                PersistentPrices persistentPrices = fetchPrices(persistenceManager, purchase.getShop());
+                PersistentShop shop = purchase.getShop();
+                PersistentPrices persistentPrices = fetchPrices(persistenceManager, shop);
 
+                Date purchaseDate = purchase.getPurchaseDate();
                 Transaction tx = startTransaction(persistenceManager);
-                for (PersistentPrice price : prices) {
-                    PersistentPrice existingPrice = persistentPrices.getPriceFor(price.getArticle());
+                for (PersistentPurchasing purchasing : purchase) {
+                    if (purchasing.getQuantity() == null) {
+                        continue;
+                    }
+                    PersistentArticle article = purchasing.getArticle();
+                    BigDecimal price = purchasing.getPrice().divide(purchasing.getQuantity());
+                    PersistentPrice existingPrice = persistentPrices.getPriceFor(article);
                     if (existingPrice == null) {
-                        persistentPrices.add(price);
+                        persistentPrices.addPriceFor(article, purchaseDate, price);
                         if (LOG.isLoggable(Level.INFO)) {
-                            LOG.info("Storing new price for " + persistentPrices.getShop() + "/" + price.getArticle());
+                            LOG.info("Storing new price for " + shop + "/" + article);
                         }
                         continue;
                     }
-                    boolean priceHasNotChanged = existingPrice.getPrice().equals(price.getPrice());
-                    boolean existingPriceIsNewerThanNewPrice = existingPrice.getSince().compareTo(price.getSince()) > 0;
+                    boolean priceHasNotChanged = existingPrice.getPrice().equals(price);
+                    boolean existingPriceIsNewerThanNewPrice = existingPrice.getSince().compareTo(purchaseDate) > 0;
                     if (priceHasNotChanged || existingPriceIsNewerThanNewPrice) {
                         if (LOG.isLoggable(Level.FINE)) {
-                            LOG.fine("Keeping existing price for " + persistentPrices.getShop() + "/" + price.getArticle());
+                            LOG.fine("Keeping existing price for " + shop + "/" + article);
                         }
                         continue;
                     }
-                    existingPrice.setSince(new Date(price.getSince().getTime()));
-                    existingPrice.setPrice(price.getPrice());
+                    existingPrice.setSince((Date) purchaseDate.clone());
+                    existingPrice.setPrice(price);
                     if (LOG.isLoggable(Level.INFO)) {
-                        LOG.info("Updating existing price for " + persistentPrices.getShop() + "/" + price.getArticle());
+                        LOG.info("Updating existing price for " + shop + "/" + article);
                     }
                 }
                 persistenceManager.makePersistent(persistentPrices);
@@ -130,20 +134,6 @@ public class PricesWorker extends HttpServlet {
                 }
 
                 return persistentPrices;
-            }
-
-            private ArrayList<PersistentPrice> calculatePricesOf(PersistentPurchase purchase) {
-                ArrayList<PersistentPrice> prices = newArrayList();
-                for (PersistentPurchasing purchasing : purchase) {
-                    BigDecimal quantity = purchasing.getQuantity();
-                    if (quantity == null) {
-                        continue;
-                    }
-                    PersistentPrice price = new PersistentPrice(
-                            purchasing.getArticle(), purchase.getPurchaseDate(), purchasing.getPrice().divide(quantity));
-                    prices.add(price);
-                }
-                return prices;
             }
 
         });
