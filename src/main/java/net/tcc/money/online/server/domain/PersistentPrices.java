@@ -10,13 +10,14 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.jdo.annotations.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import static com.google.appengine.repackaged.com.google.common.collect.Iterables.filter;
 import static com.google.appengine.repackaged.com.google.common.collect.Iterables.getOnlyElement;
 
 @PersistenceCapable
-public class PersistentPrices extends AbstractEntity<Key> {
+public class PersistentPrices extends AbstractEntity<Key> implements Iterable<PersistentPrice> {
 
     @Nullable
     @Persistent
@@ -50,10 +51,17 @@ public class PersistentPrices extends AbstractEntity<Key> {
         return this.key;
     }
 
+    @Override
+    public Iterator<PersistentPrice> iterator() {
+        return this.prices.iterator();
+    }
+
+    @Nullable
     public PersistentPrice getPriceFor(@Nonnull PersistentArticle article) {
         return getOnlyElement(filter(this.prices, withArticle(article)), null);
     }
 
+    @Nonnull
     private Predicate<? super PersistentPrice> withArticle(@Nonnull final PersistentArticle article) {
         return new Predicate<PersistentPrice>() {
             @Override
@@ -63,9 +71,13 @@ public class PersistentPrices extends AbstractEntity<Key> {
         };
     }
 
-    public void add(PersistentPrice price) {
+    @Nonnull
+    public PersistentShop getShop() {
+        return shop;
+    }
+
+    public void add(@Nonnull PersistentPrice price) {
         price.setKey(KeyFactory.createKey(getKey(), price.getClass().getSimpleName(), price.getArticle().getKeyOrThrow()));
         this.prices.add(price);
     }
-
 }

@@ -67,7 +67,7 @@ public class PricesWorker extends HttpServlet {
                     if (existingPrice == null) {
                         persistentPrices.add(price);
                         if (LOG.isLoggable(Level.INFO)) {
-                            LOG.info("Storing new price for " + price.getShop() + "/" + price.getArticle());
+                            LOG.info("Storing new price for " + persistentPrices.getShop() + "/" + price.getArticle());
                         }
                         continue;
                     }
@@ -75,14 +75,14 @@ public class PricesWorker extends HttpServlet {
                     boolean existingPriceIsNewerThanNewPrice = existingPrice.getSince().compareTo(price.getSince()) > 0;
                     if (priceHasNotChanged || existingPriceIsNewerThanNewPrice) {
                         if (LOG.isLoggable(Level.FINE)) {
-                            LOG.fine("Keeping existing price for " + price.getShop() + "/" + price.getArticle());
+                            LOG.fine("Keeping existing price for " + persistentPrices.getShop() + "/" + price.getArticle());
                         }
                         continue;
                     }
                     existingPrice.setSince(new Date(price.getSince().getTime()));
                     existingPrice.setPrice(price.getPrice());
                     if (LOG.isLoggable(Level.INFO)) {
-                        LOG.info("Updating existing price for " + price.getShop() + "/" + price.getArticle());
+                        LOG.info("Updating existing price for " + persistentPrices.getShop() + "/" + price.getArticle());
                     }
                 }
                 persistenceManager.makePersistent(persistentPrices);
@@ -112,13 +112,14 @@ public class PricesWorker extends HttpServlet {
             @SuppressWarnings("unchecked")
             private PersistentPrices fetchPrices(PersistenceManager persistenceManager, PersistentShop shop) {
                 Key key = KeyFactory.createKey(PersistentPrices.class.getSimpleName(), shop.getKeyOrThrow());
-                String fetchGroupName = "priceCalculation";
+                String fetchGroupName = "priceWithFields";
                 persistenceManager.getFetchGroup(PersistentPrices.class, fetchGroupName).addMember("shop").addMember("prices");
+                persistenceManager.getFetchGroup(PersistentPrice.class, fetchGroupName).addMember("article");
                 persistenceManager.getFetchPlan().addGroup(fetchGroupName);
                 PersistentPrices persistentPrices;
                 Transaction tx = startTransaction(persistenceManager);
                 try {
-                    persistentPrices = (PersistentPrices) persistenceManager.getObjectById(key);
+                    persistentPrices = persistenceManager.getObjectById(PersistentPrices.class, key);
                 } catch (JDOObjectNotFoundException e) {
                     persistentPrices = new PersistentPrices(shop);
                     persistenceManager.makePersistent(persistentPrices);
@@ -138,7 +139,7 @@ public class PricesWorker extends HttpServlet {
                     if (quantity == null) {
                         continue;
                     }
-                    PersistentPrice price = new PersistentPrice(purchase.getShop(),
+                    PersistentPrice price = new PersistentPrice(
                             purchasing.getArticle(), purchase.getPurchaseDate(), purchasing.getPrice().divide(quantity));
                     prices.add(price);
                 }

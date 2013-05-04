@@ -28,12 +28,6 @@ public class PersistentPrice extends AbstractEntity<Key> implements Serializable
 
     @Nonnull
     @Persistent(nullValue = NullValue.EXCEPTION)
-    @Unowned
-    @SuppressWarnings({"FieldCanBeLocal", "unused"})
-    private PersistentShop shop;
-
-    @Nonnull
-    @Persistent(nullValue = NullValue.EXCEPTION)
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     @Unowned
     private PersistentArticle article;
@@ -54,8 +48,7 @@ public class PersistentPrice extends AbstractEntity<Key> implements Serializable
         // for JDO
     }
 
-    public PersistentPrice(@Nonnull PersistentShop shop, @Nonnull PersistentArticle article, @Nonnull Date since, @Nonnull BigDecimal price) {
-        this.shop = shop;
+    public PersistentPrice(@Nonnull PersistentArticle article, @Nonnull Date since, @Nonnull BigDecimal price) {
         this.article = article;
         this.since = since;
         this.price = price;
@@ -65,11 +58,6 @@ public class PersistentPrice extends AbstractEntity<Key> implements Serializable
     @Override
     protected Key getKey() {
         return this.key;
-    }
-
-    @Nonnull
-    public PersistentShop getShop() {
-        return shop;
     }
 
     @Nonnull
