@@ -1,16 +1,19 @@
 package net.tcc.money.online.server.worker;
 
+import com.google.appengine.api.datastore.KeyFactory;
 import net.tcc.gae.ServerTools.PersistenceTemplate;
 import net.tcc.money.online.server.ServerSideTest;
 import net.tcc.money.online.server.domain.*;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
+import org.hamcrest.TypeSafeMatcher;
 import org.junit.Test;
 
 import javax.jdo.PersistenceManager;
-import javax.jdo.Query;
 import javax.jdo.Transaction;
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.List;
 
 import static com.google.appengine.repackaged.com.google.common.collect.Iterables.getOnlyElement;
 import static java.lang.System.currentTimeMillis;
@@ -20,15 +23,55 @@ import static java.util.Arrays.asList;
 import static net.tcc.gae.ServerTools.executeWithoutTransaction;
 import static net.tcc.gae.ServerTools.startTransaction;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 
-@SuppressWarnings("ConstantConditions")
+@SuppressWarnings({"ConstantConditions", "unchecked"})
 public final class PricesWorkerTest extends ServerSideTest {
 
     public static final Date YESTERDAY = new Date(currentTimeMillis() - 1000 * 60 * 60 * 24);
     public static final Date TOMORROW = new Date(currentTimeMillis() + 1000 * 60 * 60 * 24);
+    public static final Date TODAY = new Date();
     private final PricesWorker objectUnderTest = new PricesWorker();
+
+    private static Matcher<? super PersistentPrice> since(final Date since) {
+        return new TypeSafeMatcher<PersistentPrice>() {
+            @Override
+            protected boolean matchesSafely(PersistentPrice item) {
+                return since.equals(item.getSince());
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                description.appendText("a PersistentPrice in place since [" + since + "]");
+            }
+
+            @Override
+            public void describeMismatchSafely(PersistentPrice item, Description mismatchDescription) {
+                mismatchDescription.appendText("since was ").appendValue(item.getSince());
+            }
+
+        };
+    }
+
+    private static Matcher<? super PersistentPrice> withPrice(final BigDecimal price) {
+        return new TypeSafeMatcher<PersistentPrice>() {
+            @Override
+            protected boolean matchesSafely(PersistentPrice item) {
+                return price.equals(item.getPrice());
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                description.appendText("a PersistentPrice with price [" + price + "]");
+            }
+
+            @Override
+            public void describeMismatchSafely(PersistentPrice item, Description mismatchDescription) {
+                mismatchDescription.appendText("price was ").appendValue(item.getPrice());
+            }
+
+        };
+    }
 
     public PricesWorkerTest() {
         super(false);
@@ -40,9 +83,8 @@ public final class PricesWorkerTest extends ServerSideTest {
 
         objectUnderTest.calculateAndStorePricesForPurchase(purchaseId);
 
-        List<PersistentPrice> prices = fetchPricesOfShopRelatedToPurchase(purchaseId);
-
-        assertThat(prices, hasSize(1));
+        Iterable<PersistentPrice> prices = fetchPricesOfShopRelatedToPurchase(purchaseId);
+        assertThat(prices, Matchers.<PersistentPrice>iterableWithSize(1));
     }
 
     @Test
@@ -52,9 +94,9 @@ public final class PricesWorkerTest extends ServerSideTest {
 
         objectUnderTest.calculateAndStorePricesForPurchase(purchase.getKey());
 
-        List<PersistentPrice> prices = fetchPricesOfShopRelatedToPurchase(purchase.getKey());
-        assertThat(prices, hasSize(1));
-        assertThat(getOnlyElement(prices).getPrice(), is(TEN));
+        Iterable<PersistentPrice> prices = fetchPricesOfShopRelatedToPurchase(purchase.getKey());
+        assertThat(prices, Matchers.<PersistentPrice>iterableWithSize(1));
+        assertThat(prices, hasItem(both(withPrice(TEN)).and(since(TODAY))));
     }
 
     @Test
@@ -64,9 +106,9 @@ public final class PricesWorkerTest extends ServerSideTest {
 
         objectUnderTest.calculateAndStorePricesForPurchase(purchase.getKey());
 
-        List<PersistentPrice> prices = fetchPricesOfShopRelatedToPurchase(purchase.getKey());
-        assertThat(prices, hasSize(1));
-        assertThat(getOnlyElement(prices).getPrice(), is(ONE));
+        Iterable<PersistentPrice> prices = fetchPricesOfShopRelatedToPurchase(purchase.getKey());
+        assertThat(prices, Matchers.<PersistentPrice>iterableWithSize(1));
+        assertThat(prices, hasItem(both(withPrice(ONE)).and(since(TOMORROW))));
     }
 
     @Test
@@ -76,10 +118,23 @@ public final class PricesWorkerTest extends ServerSideTest {
 
         objectUnderTest.calculateAndStorePricesForPurchase(purchase.getKey());
 
-        List<PersistentPrice> prices = fetchPricesOfShopRelatedToPurchase(purchase.getKey());
-        assertThat(prices, hasSize(1));
-        assertThat(getOnlyElement(prices).getPrice(), is(TEN));
-        assertThat(getOnlyElement(prices).getSince(), is(YESTERDAY));
+        Iterable<PersistentPrice> prices = fetchPricesOfShopRelatedToPurchase(purchase.getKey());
+        assertThat(prices, Matchers.<PersistentPrice>iterableWithSize(1));
+        assertThat(prices, hasItem(both(withPrice(TEN)).and(since(YESTERDAY))));
+    }
+
+    @Test
+    public final void shouldKeepExistingPriceForOtherArticle() {
+        final PersistentPurchase purchase = givenAPurchase(TEN);
+        givenAnExistingPriceSinceForAnotherArticle(purchase, ONE, YESTERDAY);
+
+        objectUnderTest.calculateAndStorePricesForPurchase(purchase.getKey());
+
+        Iterable<PersistentPrice> prices = fetchPricesOfShopRelatedToPurchase(purchase.getKey());
+        assertThat(prices, Matchers.<PersistentPrice>iterableWithSize(2));
+        assertThat(prices, hasItems(
+                both(withPrice(ONE)).and(since(YESTERDAY)),
+                both(withPrice(TEN)).and(since(TODAY))));
     }
 
     private void givenAnExistingPriceSince(final PersistentPurchase purchase, final BigDecimal price, final Date since) {
@@ -91,10 +146,10 @@ public final class PricesWorkerTest extends ServerSideTest {
 
                 PersistentPrices prices = new PersistentPrices(shop);
                 Transaction tx = startTransaction(persistenceManager);
-                persistenceManager.makePersistent(prices);
+                prices = persistenceManager.makePersistent(prices);
                 tx.commit();
                 tx = startTransaction(persistenceManager);
-                prices.add(new PersistentPrice(shop, article, since, price));
+                prices.add(new PersistentPrice(article, since, price));
                 persistenceManager.makePersistent(prices);
                 tx.commit();
 
@@ -103,16 +158,39 @@ public final class PricesWorkerTest extends ServerSideTest {
         });
     }
 
-    private List<PersistentPrice> fetchPricesOfShopRelatedToPurchase(final Long purchaseId) {
-        return executeWithoutTransaction(new PersistenceTemplate<List<PersistentPrice>>() {
+    private void givenAnExistingPriceSinceForAnotherArticle(final PersistentPurchase purchase, final BigDecimal price, final Date since) {
+        executeWithoutTransaction(new PersistenceTemplate<Object>() {
             @Override
-            @SuppressWarnings("unchecked")
-            public List<PersistentPrice> doWithPersistenceManager(PersistenceManager persistenceManager) {
-                PersistentPurchase purchase = persistenceManager.getObjectById(PersistentPurchase.class, purchaseId);
-                Query query = persistenceManager.newQuery(PersistentPrice.class, "shop == pShop");
-                query.declareParameters("net.tcc.money.online.server.domain.PersistentShop pShop");
+            public Object doWithPersistenceManager(PersistenceManager persistenceManager) {
+                Transaction tx = startTransaction(persistenceManager);
+                PersistentArticle article = persistenceManager.makePersistent(new PersistentArticle(DATA_SET_ID, "OtherArticle", null, false, null));
+                tx.commit();
 
-                return (List<PersistentPrice>) query.execute(purchase.getShop());
+                PersistentShop shop = persistenceManager.getObjectById(PersistentShop.class, purchase.getShop().getKey());
+
+                PersistentPrices prices = new PersistentPrices(shop);
+                tx = startTransaction(persistenceManager);
+                prices = persistenceManager.makePersistent(prices);
+                tx.commit();
+                tx = startTransaction(persistenceManager);
+                prices.add(new PersistentPrice(article, since, price));
+                persistenceManager.makePersistent(prices);
+                tx.commit();
+
+                return prices;
+            }
+        });
+    }
+
+    private Iterable<PersistentPrice> fetchPricesOfShopRelatedToPurchase(final Long purchaseId) {
+        return executeWithoutTransaction(new PersistenceTemplate<Iterable<PersistentPrice>>() {
+            @Override
+            public Iterable<PersistentPrice> doWithPersistenceManager(PersistenceManager persistenceManager) {
+                PersistentPurchase purchase = persistenceManager.getObjectById(PersistentPurchase.class, purchaseId);
+                PersistentPrices prices = persistenceManager.getObjectById(PersistentPrices.class,
+                        KeyFactory.createKey(PersistentPrices.class.getSimpleName(), purchase.getShop().getKeyOrThrow()));
+                prices.iterator(); // initialize
+                return prices;
             }
         });
     }
@@ -130,7 +208,7 @@ public final class PricesWorkerTest extends ServerSideTest {
                 persistenceManager.makePersistent(article);
                 tx.commit();
                 tx = startTransaction(persistenceManager);
-                PersistentPurchase purchase = new PersistentPurchase(DATA_SET_ID, shop, new Date(), asList(new PersistentPurchasing(article, ONE, price, null)));
+                PersistentPurchase purchase = new PersistentPurchase(DATA_SET_ID, shop, TODAY, asList(new PersistentPurchasing(article, ONE, price, null)));
                 purchase = persistenceManager.makePersistent(purchase);
                 tx.commit();
 
@@ -138,5 +216,6 @@ public final class PricesWorkerTest extends ServerSideTest {
             }
         });
     }
+
 
 }
