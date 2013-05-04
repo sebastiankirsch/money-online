@@ -82,33 +82,23 @@ public final class PricesWorkerTest extends ServerSideTest {
         assertThat(getOnlyElement(prices).getSince(), is(YESTERDAY));
     }
 
-    @Test
-    public final void shouldDeleteDuplicatePrice() {
-        Date twoDaysAgo = new Date(currentTimeMillis() - 1000 * 60 * 60 * 24 * 2);
-        Date threeDaysAgo = new Date(currentTimeMillis() - 1000 * 60 * 60 * 24 * 3);
-        final PersistentPurchase purchase = givenAPurchase(TEN);
-        givenAnExistingPriceSince(purchase, TEN, YESTERDAY);
-        givenAnExistingPriceSince(purchase, ONE, twoDaysAgo);
-        givenAnExistingPriceSince(purchase, TEN, threeDaysAgo);
-
-        objectUnderTest.calculateAndStorePricesForPurchase(purchase.getKey());
-
-        List<PersistentPrice> prices = fetchPricesOfShopRelatedToPurchase(purchase.getKey());
-        assertThat(prices, hasSize(1));
-        assertThat(getOnlyElement(prices).getPrice(), is(TEN));
-        assertThat(getOnlyElement(prices).getSince(), is(YESTERDAY));
-    }
-
     private void givenAnExistingPriceSince(final PersistentPurchase purchase, final BigDecimal price, final Date since) {
         executeWithoutTransaction(new PersistenceTemplate<Object>() {
             @Override
             public Object doWithPersistenceManager(PersistenceManager persistenceManager) {
                 PersistentShop shop = persistenceManager.getObjectById(PersistentShop.class, purchase.getShop().getKey());
                 PersistentArticle article = persistenceManager.getObjectById(PersistentArticle.class, getOnlyElement(purchase).getArticle().getKey());
+
+                PersistentPrices prices = new PersistentPrices(shop);
                 Transaction tx = startTransaction(persistenceManager);
-                PersistentPrice pPrice = persistenceManager.makePersistent(new PersistentPrice(shop, article, since, price));
+                persistenceManager.makePersistent(prices);
                 tx.commit();
-                return pPrice;
+                tx = startTransaction(persistenceManager);
+                prices.add(new PersistentPrice(shop, article, since, price));
+                persistenceManager.makePersistent(prices);
+                tx.commit();
+
+                return prices;
             }
         });
     }

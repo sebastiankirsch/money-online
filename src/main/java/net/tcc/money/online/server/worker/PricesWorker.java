@@ -1,18 +1,14 @@
 package net.tcc.money.online.server.worker;
 
-import com.google.appengine.repackaged.com.google.common.base.Function;
+import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.repackaged.com.google.common.base.StringUtil;
-import com.google.appengine.repackaged.com.google.common.collect.Iterables;
-import com.google.appengine.repackaged.com.google.common.collect.Ordering;
+import net.tcc.gae.ServerTools;
 import net.tcc.gae.ServerTools.PersistenceTemplate;
-import net.tcc.money.online.server.domain.PersistentPrice;
-import net.tcc.money.online.server.domain.PersistentPurchase;
-import net.tcc.money.online.server.domain.PersistentPurchasing;
+import net.tcc.money.online.server.domain.*;
 
-import javax.annotation.Nullable;
 import javax.jdo.JDOObjectNotFoundException;
 import javax.jdo.PersistenceManager;
-import javax.jdo.Query;
 import javax.jdo.Transaction;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -22,7 +18,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,14 +28,6 @@ import static net.tcc.gae.ServerTools.startTransaction;
 public class PricesWorker extends HttpServlet {
 
     private static final Logger LOG = Logger.getLogger(PricesWorker.class.getName());
-
-    static final Function<PersistentPrice, Date> SINCE = new Function<PersistentPrice, Date>() {
-        @Nullable
-        @Override
-        public Date apply(@Nullable PersistentPrice price) {
-            return price == null ? null : price.getSince();
-        }
-    };
 
     public static final String PURCHASE_ID = "purchaseId";
 
@@ -72,37 +59,34 @@ public class PricesWorker extends HttpServlet {
             public Collection<PersistentPrice> doWithPersistenceManager(PersistenceManager persistenceManager) {
                 PersistentPurchase purchase = fetchPurchase(persistenceManager);
                 ArrayList<PersistentPrice> prices = calculatePricesOf(purchase);
+                PersistentPrices persistentPrices = fetchPrices(persistenceManager, purchase.getShop());
 
-                Query query = persistenceManager.newQuery(PersistentPrice.class, "shop == pShop && article == pArticle");
-                query.declareParameters("net.tcc.money.online.server.domain.PersistentShop pShop, net.tcc.money.online.server.domain.PersistentArticle pArticle");
+                Transaction tx = startTransaction(persistenceManager);
                 for (PersistentPrice price : prices) {
-                    Transaction tx = startTransaction(persistenceManager);
-                    @SuppressWarnings("unchecked")
-                    List<PersistentPrice> existingPrices = (List<PersistentPrice>) query.execute(price.getShop(), price.getArticle());
-                    if (existingPrices.isEmpty()) {
-                        persistenceManager.makePersistent(price);
-                        tx.commit();
+                    PersistentPrice existingPrice = persistentPrices.getPriceFor(price.getArticle());
+                    if (existingPrice == null) {
+                        persistentPrices.add(price);
+                        if (LOG.isLoggable(Level.INFO)) {
+                            LOG.info("Storing new price for " + price.getShop() + "/" + price.getArticle());
+                        }
                         continue;
                     }
-                    while (existingPrices.size() > 1) {
-                        PersistentPrice oldestPrice = Iterables.getOnlyElement(Ordering.natural().nullsFirst().onResultOf(SINCE).leastOf(existingPrices, 1));
-                        existingPrices.remove(oldestPrice);
-                        persistenceManager.deletePersistent(oldestPrice);
-                        tx.commit();
-                        tx = startTransaction(persistenceManager);
-                    }
-                    PersistentPrice existingPrice = Iterables.getOnlyElement(existingPrices);
                     boolean priceHasNotChanged = existingPrice.getPrice().equals(price.getPrice());
                     boolean existingPriceIsNewerThanNewPrice = existingPrice.getSince().compareTo(price.getSince()) > 0;
                     if (priceHasNotChanged || existingPriceIsNewerThanNewPrice) {
+                        if (LOG.isLoggable(Level.FINE)) {
+                            LOG.fine("Keeping existing price for " + price.getShop() + "/" + price.getArticle());
+                        }
                         continue;
                     }
                     existingPrice.setSince(new Date(price.getSince().getTime()));
                     existingPrice.setPrice(price.getPrice());
-                    persistenceManager.makePersistent(existingPrice);
-
-                    tx.commit();
+                    if (LOG.isLoggable(Level.INFO)) {
+                        LOG.info("Updating existing price for " + price.getShop() + "/" + price.getArticle());
+                    }
                 }
+                persistenceManager.makePersistent(persistentPrices);
+                tx.commit();
 
                 return null;
             }
@@ -118,8 +102,33 @@ public class PricesWorker extends HttpServlet {
                 } catch (JDOObjectNotFoundException oNFE) {
                     LOG.warning("Purchase #" + purchaseId + " wasn't found. Maybe data is not yet consistent.");
                     throw oNFE;
+                } finally {
+                    persistenceManager.getFetchPlan().removeGroup(fetchGroupName);
                 }
+
                 return purchase;
+            }
+
+            @SuppressWarnings("unchecked")
+            private PersistentPrices fetchPrices(PersistenceManager persistenceManager, PersistentShop shop) {
+                Key key = KeyFactory.createKey(PersistentPrices.class.getSimpleName(), shop.getKeyOrThrow());
+                String fetchGroupName = "priceCalculation";
+                persistenceManager.getFetchGroup(PersistentPrices.class, fetchGroupName).addMember("shop").addMember("prices");
+                persistenceManager.getFetchPlan().addGroup(fetchGroupName);
+                PersistentPrices persistentPrices;
+                Transaction tx = startTransaction(persistenceManager);
+                try {
+                    persistentPrices = (PersistentPrices) persistenceManager.getObjectById(key);
+                } catch (JDOObjectNotFoundException e) {
+                    persistentPrices = new PersistentPrices(shop);
+                    persistenceManager.makePersistent(persistentPrices);
+                    tx.commit();
+                } finally {
+                    persistenceManager.getFetchPlan().removeGroup(fetchGroupName);
+                    ServerTools.rollback(persistenceManager);
+                }
+
+                return persistentPrices;
             }
 
             private ArrayList<PersistentPrice> calculatePricesOf(PersistentPurchase purchase) {
@@ -132,9 +141,6 @@ public class PricesWorker extends HttpServlet {
                     PersistentPrice price = new PersistentPrice(purchase.getShop(),
                             purchasing.getArticle(), purchase.getPurchaseDate(), purchasing.getPrice().divide(quantity));
                     prices.add(price);
-                    if (LOG.isLoggable(Level.FINE)) {
-                        LOG.fine("Storing " + price);
-                    }
                 }
                 return prices;
             }
