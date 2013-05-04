@@ -5,6 +5,11 @@ public abstract class AbstractEntity<Key> {
     protected abstract Key getKey();
 
     @Override
+    public String toString() {
+        return getClass().getSimpleName() + "#" + getKey();
+    }
+
+    @Override
     @SuppressWarnings("SimplifiableIfStatement")
     public boolean equals(Object o) {
         Key key = getKey();
