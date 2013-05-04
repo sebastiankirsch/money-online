@@ -137,64 +137,6 @@ public final class PricesWorkerTest extends ServerSideTest {
                 both(withPrice(TEN)).and(since(TODAY))));
     }
 
-    private void givenAnExistingPriceSince(final PersistentPurchase purchase, final BigDecimal price, final Date since) {
-        executeWithoutTransaction(new PersistenceTemplate<Object>() {
-            @Override
-            public Object doWithPersistenceManager(PersistenceManager persistenceManager) {
-                PersistentShop shop = persistenceManager.getObjectById(PersistentShop.class, purchase.getShop().getKey());
-                PersistentArticle article = persistenceManager.getObjectById(PersistentArticle.class, getOnlyElement(purchase).getArticle().getKey());
-
-                PersistentPrices prices = new PersistentPrices(shop);
-                Transaction tx = startTransaction(persistenceManager);
-                prices = persistenceManager.makePersistent(prices);
-                tx.commit();
-                tx = startTransaction(persistenceManager);
-                prices.add(new PersistentPrice(article, since, price));
-                persistenceManager.makePersistent(prices);
-                tx.commit();
-
-                return prices;
-            }
-        });
-    }
-
-    private void givenAnExistingPriceSinceForAnotherArticle(final PersistentPurchase purchase, final BigDecimal price, final Date since) {
-        executeWithoutTransaction(new PersistenceTemplate<Object>() {
-            @Override
-            public Object doWithPersistenceManager(PersistenceManager persistenceManager) {
-                Transaction tx = startTransaction(persistenceManager);
-                PersistentArticle article = persistenceManager.makePersistent(new PersistentArticle(DATA_SET_ID, "OtherArticle", null, false, null));
-                tx.commit();
-
-                PersistentShop shop = persistenceManager.getObjectById(PersistentShop.class, purchase.getShop().getKey());
-
-                PersistentPrices prices = new PersistentPrices(shop);
-                tx = startTransaction(persistenceManager);
-                prices = persistenceManager.makePersistent(prices);
-                tx.commit();
-                tx = startTransaction(persistenceManager);
-                prices.add(new PersistentPrice(article, since, price));
-                persistenceManager.makePersistent(prices);
-                tx.commit();
-
-                return prices;
-            }
-        });
-    }
-
-    private Iterable<PersistentPrice> fetchPricesOfShopRelatedToPurchase(final Long purchaseId) {
-        return executeWithoutTransaction(new PersistenceTemplate<Iterable<PersistentPrice>>() {
-            @Override
-            public Iterable<PersistentPrice> doWithPersistenceManager(PersistenceManager persistenceManager) {
-                PersistentPurchase purchase = persistenceManager.getObjectById(PersistentPurchase.class, purchaseId);
-                PersistentPrices prices = persistenceManager.getObjectById(PersistentPrices.class,
-                        KeyFactory.createKey(PersistentPrices.class.getSimpleName(), purchase.getShop().getKeyOrThrow()));
-                prices.iterator(); // initialize
-                return prices;
-            }
-        });
-    }
-
     private PersistentPurchase givenAPurchase(final BigDecimal price) {
         return executeWithoutTransaction(new PersistenceTemplate<PersistentPurchase>() {
             @Override
@@ -217,5 +159,55 @@ public final class PricesWorkerTest extends ServerSideTest {
         });
     }
 
+    private void givenAnExistingPriceSince(final PersistentPurchase purchase, final BigDecimal price, final Date since) {
+        executeWithoutTransaction(new PersistenceTemplate<Object>() {
+            @Override
+            public Object doWithPersistenceManager(PersistenceManager persistenceManager) {
+                PersistentArticle article = persistenceManager.getObjectById(PersistentArticle.class, getOnlyElement(purchase).getArticle().getKey());
+
+                return getPersistentPrices(persistenceManager, purchase, article, price, since);
+            }
+        });
+    }
+
+    private void givenAnExistingPriceSinceForAnotherArticle(final PersistentPurchase purchase, final BigDecimal price, final Date since) {
+        executeWithoutTransaction(new PersistenceTemplate<Object>() {
+            @Override
+            public Object doWithPersistenceManager(PersistenceManager persistenceManager) {
+                Transaction tx = startTransaction(persistenceManager);
+                PersistentArticle article = persistenceManager.makePersistent(new PersistentArticle(DATA_SET_ID, "OtherArticle", null, false, null));
+                tx.commit();
+
+                return getPersistentPrices(persistenceManager, purchase, article, price, since);
+            }
+        });
+    }
+
+    private PersistentPrices getPersistentPrices(PersistenceManager persistenceManager, PersistentPurchase purchase, PersistentArticle article, BigDecimal price, Date since) {
+        PersistentShop shop = persistenceManager.getObjectById(PersistentShop.class, purchase.getShop().getKey());
+
+        PersistentPrices prices = new PersistentPrices(shop);
+        Transaction tx = startTransaction(persistenceManager);
+        prices = persistenceManager.makePersistent(prices);
+        tx.commit();
+        tx = startTransaction(persistenceManager);
+        prices.add(new PersistentPrice(article, since, price));
+        persistenceManager.makePersistent(prices);
+        tx.commit();
+        return prices;
+    }
+
+    private Iterable<PersistentPrice> fetchPricesOfShopRelatedToPurchase(final Long purchaseId) {
+        return executeWithoutTransaction(new PersistenceTemplate<Iterable<PersistentPrice>>() {
+            @Override
+            public Iterable<PersistentPrice> doWithPersistenceManager(PersistenceManager persistenceManager) {
+                PersistentPurchase purchase = persistenceManager.getObjectById(PersistentPurchase.class, purchaseId);
+                PersistentPrices prices = persistenceManager.getObjectById(PersistentPrices.class,
+                        KeyFactory.createKey(PersistentPrices.class.getSimpleName(), purchase.getShop().getKeyOrThrow()));
+                prices.iterator(); // initialize
+                return prices;
+            }
+        });
+    }
 
 }
