@@ -9,7 +9,6 @@
 
     <security-constraint>
         <web-resource-collection>
-            <url-pattern>/</url-pattern>
             <url-pattern>/OnlineMoney.html</url-pattern>
             <url-pattern>/online_money/shoppingService/*</url-pattern>
         </web-resource-collection>
@@ -39,7 +38,7 @@
 
     <!-- Default page to serve -->
     <welcome-file-list>
-        <welcome-file>OnlineMoney.html</welcome-file>
+        <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>
 
     <servlet>
