@@ -1,31 +1,23 @@
 package net.tcc.money.online.client.common;
 
-import java.math.BigDecimal;
-
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.text.shared.AbstractRenderer;
-import com.google.gwt.text.shared.Renderer;
+
+import java.math.BigDecimal;
 
 public class BigDecimalRenderer extends AbstractRenderer<BigDecimal> {
 
-	private static BigDecimalRenderer INSTANCE;
+    public static final BigDecimalRenderer INSTANCE = new BigDecimalRenderer();
 
-	public static Renderer<BigDecimal> instance() {
-		if (INSTANCE == null) {
-			INSTANCE = new BigDecimalRenderer();
-		}
-		return INSTANCE;
-	}
+    private BigDecimalRenderer() {
+    }
 
-	protected BigDecimalRenderer() {
-	}
+    public String render(BigDecimal object) {
+        if (null == object) {
+            return "";
+        }
 
-	public String render(BigDecimal object) {
-		if (null == object) {
-			return "";
-		}
-
-		return NumberFormat.getDecimalFormat().format(object);
-	}
+        return NumberFormat.getDecimalFormat().format(object);
+    }
 
 }

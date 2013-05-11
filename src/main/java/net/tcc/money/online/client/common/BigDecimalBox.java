@@ -8,6 +8,6 @@ import com.google.gwt.user.client.ui.ValueBox;
 
 public class BigDecimalBox extends ValueBox<BigDecimal> {
 	public BigDecimalBox() {
-		super(Document.get().createTextInputElement(), BigDecimalRenderer.instance(), BigDecimalParser.instance());
+		super(Document.get().createTextInputElement(), BigDecimalRenderer.INSTANCE, BigDecimalParser.INSTANCE);
 	}
 }
