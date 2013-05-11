@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="GWT DevServer" type="MavenRunConfiguration" factoryName="Maven">
+  <configuration default="false" name="GWT DevServer debug" type="MavenRunConfiguration" factoryName="Maven">
     <MavenSettings>
       <option name="myGeneralSettings" />
       <option name="myRunnerSettings" />
@@ -10,7 +10,7 @@
           </option>
           <option name="goals">
             <list>
-              <option value="gwt:run" />
+              <option value="gwt:debug" />
             </list>
           </option>
           <option name="profilesMap">
@@ -23,8 +23,6 @@
         </MavenRunnerParameters>
       </option>
     </MavenSettings>
-    <RunnerSettings RunnerId="Run" />
-    <ConfigurationWrapper RunnerId="Run" />
     <method />
   </configuration>
 </component>
