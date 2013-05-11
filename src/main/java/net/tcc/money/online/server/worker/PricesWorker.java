@@ -94,16 +94,16 @@ public class PricesWorker extends HttpServlet {
                 persistenceManager.getFetchGroup(PersistentPrice.class, fetchGroupName).addMember("article");
                 persistenceManager.getFetchPlan().addGroup(fetchGroupName);
                 PersistentPrices persistentPrices;
-                Transaction tx = startTransaction(persistenceManager);
                 try {
                     persistentPrices = persistenceManager.getObjectById(PersistentPrices.class, key);
                 } catch (JDOObjectNotFoundException e) {
+                    Transaction tx = startTransaction(persistenceManager);
                     persistentPrices = new PersistentPrices(shop);
                     persistenceManager.makePersistent(persistentPrices);
                     tx.commit();
                 } finally {
-                    persistenceManager.getFetchPlan().removeGroup(fetchGroupName);
                     ServerTools.rollback(persistenceManager);
+                    persistenceManager.getFetchPlan().removeGroup(fetchGroupName);
                 }
                 if (LOG.isLoggable(Level.INFO)) {
                     LOG.info((currentTimeMillis() - start) + "ms to fetch prices of " + shop);
