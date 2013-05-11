@@ -10,7 +10,7 @@
           </option>
           <option name="goals">
             <list>
-              <option value="gwt:run" />
+              <option value="gwt:debug" />
             </list>
           </option>
           <option name="profilesMap">
