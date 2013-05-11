@@ -17,8 +17,11 @@ import javax.annotation.Nullable;
 import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
 import javax.jdo.Transaction;
+import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -99,6 +102,46 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
     private <Dto, Persistence> Iterable<Dto> loadAll(Class<Persistence> persistenceClass,
                                                      Function<Persistence, Dto> function) {
         return loadAll(persistenceClass, function, null);
+    }
+
+    @Override
+    public Map<Category, BigDecimal> loadCategorySpendings() {
+        final String dataSetId = getDataSetId();
+        return executeWithoutTransaction(new PersistenceTemplate<Map<Category, BigDecimal>>() {
+            @Override
+            public Map<Category, BigDecimal> doWithPersistenceManager(PersistenceManager persistenceManager) {
+                String fetchGroup = "calculateCategorySpendings";
+                persistenceManager.getFetchGroup(PersistentPurchase.class, fetchGroup).addMember("purchasings");
+                persistenceManager.getFetchGroup(PersistentPurchasing.class, fetchGroup).addMember("article").addMember("category");
+                persistenceManager.getFetchGroup(PersistentArticle.class, fetchGroup).addMember("category");
+                persistenceManager.getFetchPlan().addGroup(fetchGroup);
+                Query query = persistenceManager.newQuery(PersistentPurchase.class, "dataSetId == pDataSetId");
+                query.declareParameters("java.lang.String pDataSetId");
+                @SuppressWarnings("unchecked")
+                Collection<PersistentPurchase> purchases = (Collection<PersistentPurchase>) query.execute(dataSetId);
+
+                Map<PersistentCategory, BigDecimal> persistentData = new HashMap<>();
+                for (PersistentPurchase purchase : purchases) {
+                    for (PersistentPurchasing purchasing : purchase) {
+                        PersistentCategory category = purchasing.getCategory();
+                        if (category == null) {
+                            category = purchasing.getArticle().getCategory();
+                        }
+                        BigDecimal sum = persistentData.get(category);
+                        if (sum == null) {
+                            sum = BigDecimal.ZERO;
+                        }
+                        persistentData.put(category, sum.add(purchasing.getPrice()));
+                    }
+                }
+
+                HashMap<Category, BigDecimal> data = new HashMap<>(persistentData.size(), 1f);
+                for (Map.Entry<PersistentCategory, BigDecimal> dataEntry : persistentData.entrySet()) {
+                    data.put(toCategory.apply(dataEntry.getKey()), dataEntry.getValue());
+                }
+                return data;
+            }
+        });
     }
 
     @Nonnull

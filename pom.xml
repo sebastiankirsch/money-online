@@ -165,6 +165,17 @@
             <artifactId>gwt-servlet</artifactId>
             <version>${gwt.target.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.gwt.google-apis</groupId>
+            <artifactId>gwt-visualization</artifactId>
+            <version>1.0.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.gwt</groupId>
+                    <artifactId>gwt-user</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 
         <!-- RUNTIME dependencies -->
         <dependency>

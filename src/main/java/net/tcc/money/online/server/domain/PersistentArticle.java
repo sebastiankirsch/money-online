@@ -75,6 +75,11 @@ public class PersistentArticle extends DataSetBoundEntity implements Serializabl
         return article;
     }
 
+    @Nullable
+    public PersistentCategory getCategory() {
+        return category;
+    }
+
     public void setCategory(@Nullable PersistentCategory category) {
         this.category = category;
     }

@@ -11,37 +11,40 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 
 public class Navigation extends Composite {
 
-	interface MyUiBinder extends UiBinder<VerticalPanel, Navigation> {
-	}
+    interface MyUiBinder extends UiBinder<VerticalPanel, Navigation> {
+    }
 
-	private static MyUiBinder uiBinder = GWT.create(MyUiBinder.class);
+    private static MyUiBinder uiBinder = GWT.create(MyUiBinder.class);
 
-	@UiField
-	Anchor newPurchase;
+    @UiField
+    Anchor newPurchase;
 
-	@UiField
-	Anchor manageCategories;
+    @UiField
+    Anchor manageCategories;
 
-	@UiField
-	Anchor listPurchases;
+    @UiField
+    Anchor listPurchases;
 
-	public Navigation(final Runnable newPurchaseAction, final Runnable manageCategoriesAction,
-			final Runnable listPurchasesAction) {
-		initWidget(uiBinder.createAndBindUi(this));
+    @UiField
+    Anchor showDiagram;
 
-		executeOnClick(this.newPurchase, newPurchaseAction);
-		executeOnClick(this.manageCategories, manageCategoriesAction);
-		executeOnClick(this.listPurchases, listPurchasesAction);
-	}
+    public Navigation(Runnable newPurchaseAction, Runnable manageCategoriesAction, Runnable listPurchasesAction, Runnable showDiagramAction) {
+        initWidget(uiBinder.createAndBindUi(this));
 
-	private static void executeOnClick(Anchor anchor, final Runnable action) {
-		anchor.addClickHandler(new ClickHandler() {
+        executeOnClick(this.newPurchase, newPurchaseAction);
+        executeOnClick(this.manageCategories, manageCategoriesAction);
+        executeOnClick(this.listPurchases, listPurchasesAction);
+        executeOnClick(this.showDiagram, showDiagramAction);
+    }
 
-			@Override
-			public void onClick(ClickEvent event) {
-				action.run();
-			}
-		});
-	}
+    private static void executeOnClick(Anchor anchor, final Runnable action) {
+        anchor.addClickHandler(new ClickHandler() {
+
+            @Override
+            public void onClick(ClickEvent event) {
+                action.run();
+            }
+        });
+    }
 
 }

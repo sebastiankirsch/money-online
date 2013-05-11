@@ -1,10 +1,6 @@
 package net.tcc.money.online.client;
 
-import net.tcc.money.online.client.ui.CreatePurchase;
-import net.tcc.money.online.client.ui.EnterPurchasings;
-import net.tcc.money.online.client.ui.ListPurchases;
-import net.tcc.money.online.client.ui.ManageCategories;
-import net.tcc.money.online.client.ui.Navigation;
+import net.tcc.money.online.client.ui.*;
 import net.tcc.money.online.shared.dto.Article;
 import net.tcc.money.online.shared.dto.Category;
 import net.tcc.money.online.shared.dto.Purchase;
@@ -18,180 +14,206 @@ import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 
+import java.math.BigDecimal;
+import java.util.Map;
+
 public class OnlineMoney implements EntryPoint, ExceptionHandler {
 
-	private final ShoppingServiceAsync shoppingService = GWT.create(ShoppingService.class);
+    private final ShoppingServiceAsync shoppingService = GWT.create(ShoppingService.class);
 
-	public void onModuleLoad() {
-		setContent(new Label("Anwendung wird geladen..."));
-		initNavigation();
-		startPurchase();
-	}
+    public void onModuleLoad() {
+        setContent(new Label("Anwendung wird geladen..."));
+        initNavigation();
+        startPurchase();
+    }
 
-	private void initNavigation() {
-		RootPanel navigationPanel = RootPanel.get("navigationPanel");
-		navigationPanel.add(new Navigation(new Runnable() {
-			@Override
-			public void run() {
-				startPurchase();
-			}
-		}, new Runnable() {
-			@Override
-			public void run() {
-				manageCategories();
-			}
-		}, new Runnable() {
-			@Override
-			public void run() {
-				listPurchases();
-			}
-		}));
-	}
+    private void initNavigation() {
+        RootPanel navigationPanel = RootPanel.get("navigationPanel");
+        navigationPanel.add(new Navigation(new Runnable() {
+            @Override
+            public void run() {
+                startPurchase();
+            }
+        }, new Runnable() {
+            @Override
+            public void run() {
+                manageCategories();
+            }
+        }, new Runnable() {
+            @Override
+            public void run() {
+                listPurchases();
+            }
+        }, new Runnable() {
+            @Override
+            public void run() {
+                displayDiagram();
+            }
+        }
+        ));
+    }
 
-	private void startPurchase() {
-		setContent(new Label("Läden werden geladen..."));
-		shoppingService.loadShops(new AsyncCallback<Iterable<Shop>>() {
-			@Override
-			public void onSuccess(Iterable<Shop> result) {
-				setContent(new CreatePurchase(new Callback<Purchase, Void>() {
-					@Override
-					public void onSuccess(Purchase result) {
-						startEnteringPurchasings(result);
-					}
+    void startPurchase() {
+        setContent(new Label("Läden werden geladen..."));
+        shoppingService.loadShops(new AsyncCallback<Iterable<Shop>>() {
+            @Override
+            public void onSuccess(Iterable<Shop> result) {
+                setContent(new CreatePurchase(new Callback<Purchase, Void>() {
+                    @Override
+                    public void onSuccess(Purchase result) {
+                        startEnteringPurchasings(result);
+                    }
 
-					@Override
-					public void onFailure(Void reason) {
-						throw new RuntimeException("Who calls me? I said: who is calling me?!?");
-					}
-				}, shoppingService, result));
-			}
+                    @Override
+                    public void onFailure(Void reason) {
+                        throw new RuntimeException("Who calls me? I said: who is calling me?!?");
+                    }
+                }, shoppingService, result));
+            }
 
-			@Override
-			public void onFailure(Throwable caught) {
-				handleException("Konnte die Läden nicht laden!", caught);
-			}
-		});
-	}
+            @Override
+            public void onFailure(Throwable caught) {
+                handleException("Konnte die Läden nicht laden!", caught);
+            }
+        });
+    }
 
-	private void manageCategories() {
-		setContent(new Label("Artikel & Kategorien werden geladen..."));
-		new ArticlesAndCategoriesLoader(this.shoppingService) {
+    void startEnteringPurchasings(final Purchase purchase) {
+        setContent(new Label("Einkauf wird initialisiert..."));
+        new ArticlesAndCategoriesLoader(this.shoppingService) {
+            @Override
+            protected void done(Iterable<Article> articles, Iterable<Category> categories) {
+                setContent(new EnterPurchasings(new Callback<Purchase, Void>() {
+                    @Override
+                    public void onSuccess(Purchase result) {
+                        setContent(new Label("Einkauf wird gespeichert..."));
+                        shoppingService.createPurchase(result, new AsyncCallback<Void>() {
+                            @Override
+                            public void onSuccess(Void result) {
+                                setContent(new Label("Einkauf wurde gespeichert!"));
+                            }
 
-			@Override
-			protected void done(Iterable<Article> articles, Iterable<Category> categories) {
-				setContent(new ManageCategories(OnlineMoney.this, shoppingService, articles, categories));
-			}
-		}.load();
-	}
+                            @Override
+                            public void onFailure(Throwable caught) {
+                                handleException("Konnte Einkauf nicht speichern!", caught);
+                            }
+                        });
+                    }
 
-	protected void listPurchases() {
-		setContent(new ListPurchases(this.shoppingService, this));
-	}
+                    @Override
+                    public void onFailure(Void reason) {
+                        startPurchase();
+                    }
+                }, purchase, articles, categories));
+            }
+        }.load();
+    }
 
-	private void startEnteringPurchasings(final Purchase purchase) {
-		setContent(new Label("Einkauf wird initialisiert..."));
-		new ArticlesAndCategoriesLoader(this.shoppingService) {
-			@Override
-			protected void done(Iterable<Article> articles, Iterable<Category> categories) {
-				setContent(new EnterPurchasings(new Callback<Purchase, Void>() {
-					@Override
-					public void onSuccess(Purchase result) {
-						setContent(new Label("Einkauf wird gespeichert..."));
-						shoppingService.createPurchase(result, new AsyncCallback<Void>() {
-							@Override
-							public void onSuccess(Void result) {
-								setContent(new Label("Einkauf wurde gespeichert!"));
-							}
+    void manageCategories() {
+        setContent(new Label("Artikel & Kategorien werden geladen..."));
+        new ArticlesAndCategoriesLoader(this.shoppingService) {
 
-							@Override
-							public void onFailure(Throwable caught) {
-								handleException("Konnte Einkauf nicht speichern!", caught);
-							}
-						});
-					}
+            @Override
+            protected void done(Iterable<Article> articles, Iterable<Category> categories) {
+                setContent(new ManageCategories(OnlineMoney.this, shoppingService, articles, categories));
+            }
+        }.load();
+    }
 
-					@Override
-					public void onFailure(Void reason) {
-						startPurchase();
-					}
-				}, purchase, articles, categories));
-			}
-		}.load();
-	}
+    void listPurchases() {
+        setContent(new ListPurchases(this.shoppingService, this));
+    }
 
-	private void setContent(IsWidget widget) {
-		RootPanel rootPanel = RootPanel.get("contentPanel");
-		rootPanel.clear();
-		rootPanel.add(widget);
-	}
+    void displayDiagram() {
+        setContent(new Label("Daten werden geladen..."));
+        this.shoppingService.loadCategorySpendings(new AsyncCallback<Map<Category, BigDecimal>>() {
 
-	@Override
-	public void handleException(String message, Throwable caught) {
-		StringBuilder buffy = new StringBuilder(message);
-		buffy.append("<br/>");
-		buffy.append(caught);
-		for (StackTraceElement ste : caught.getStackTrace()) {
-			buffy.append("<br/>");
-			buffy.append(ste.toString());
-		}
-		setContent(new Label(buffy.toString()));
-	}
+            @Override
+            public void onFailure(Throwable caught) {
+                handleException("Konnte Daten nicht laden!", caught);
+            }
 
-	private abstract class ArticlesAndCategoriesLoader {
-		private final ShoppingServiceAsync shoppingService;
-		private Iterable<Article> articles;
-		private Iterable<Category> categories;
+            @Override
+            public void onSuccess(Map<Category, BigDecimal> data) {
+                setContent(new Diagram(data));
+            }
 
-		protected ArticlesAndCategoriesLoader(ShoppingServiceAsync shoppingService) {
-			this.shoppingService = shoppingService;
-		}
+        });
+    }
 
-		private synchronized void executeDoneIfEverythingIsLoaded() {
-			if (this.articles == null || this.categories == null)
-				return;
-			done(articles, categories);
-		}
+    void setContent(IsWidget widget) {
+        RootPanel rootPanel = RootPanel.get("contentPanel");
+        rootPanel.clear();
+        rootPanel.add(widget);
+    }
 
-		void setArticles(Iterable<Article> articles) {
-			this.articles = articles;
-			executeDoneIfEverythingIsLoaded();
-		}
+    @Override
+    public void handleException(String message, Throwable caught) {
+        StringBuilder buffy = new StringBuilder(message);
+        buffy.append("<br/>");
+        buffy.append(caught);
+        for (StackTraceElement ste : caught.getStackTrace()) {
+            buffy.append("<br/>");
+            buffy.append(ste.toString());
+        }
+        setContent(new Label(buffy.toString()));
+    }
 
-		void setCategories(Iterable<Category> categories) {
-			this.categories = categories;
-			executeDoneIfEverythingIsLoaded();
-		}
+    private abstract class ArticlesAndCategoriesLoader {
+        private final ShoppingServiceAsync shoppingService;
+        private Iterable<Article> articles;
+        private Iterable<Category> categories;
 
-		protected abstract void done(Iterable<Article> articles, Iterable<Category> categories);
+        protected ArticlesAndCategoriesLoader(ShoppingServiceAsync shoppingService) {
+            this.shoppingService = shoppingService;
+        }
 
-		public void load() {
-			this.shoppingService.loadArticles(new AsyncCallback<Iterable<Article>>() {
+        private synchronized void executeDoneIfEverythingIsLoaded() {
+            if (this.articles == null || this.categories == null)
+                return;
+            done(articles, categories);
+        }
 
-				@Override
-				public void onFailure(Throwable caught) {
-					handleException("Konnte Artikel nicht laden!", caught);
-				}
+        void setArticles(Iterable<Article> articles) {
+            this.articles = articles;
+            executeDoneIfEverythingIsLoaded();
+        }
 
-				@Override
-				public void onSuccess(Iterable<Article> articles) {
-					setArticles(articles);
-				}
+        void setCategories(Iterable<Category> categories) {
+            this.categories = categories;
+            executeDoneIfEverythingIsLoaded();
+        }
 
-			});
-			shoppingService.loadCategories(new AsyncCallback<Iterable<Category>>() {
+        protected abstract void done(Iterable<Article> articles, Iterable<Category> categories);
 
-				@Override
-				public void onFailure(Throwable caught) {
-					handleException("Konnte Kategorien nicht laden!", caught);
-				}
+        public void load() {
+            this.shoppingService.loadArticles(new AsyncCallback<Iterable<Article>>() {
 
-				@Override
-				public void onSuccess(Iterable<Category> categories) {
-					setCategories(categories);
-				}
+                @Override
+                public void onFailure(Throwable caught) {
+                    handleException("Konnte Artikel nicht laden!", caught);
+                }
 
-			});
-		}
-	}
+                @Override
+                public void onSuccess(Iterable<Article> articles) {
+                    setArticles(articles);
+                }
+
+            });
+            shoppingService.loadCategories(new AsyncCallback<Iterable<Category>>() {
+
+                @Override
+                public void onFailure(Throwable caught) {
+                    handleException("Konnte Kategorien nicht laden!", caught);
+                }
+
+                @Override
+                public void onSuccess(Iterable<Category> categories) {
+                    setCategories(categories);
+                }
+
+            });
+        }
+    }
 
 }

@@ -92,4 +92,9 @@ public class PersistentPurchasing extends AbstractEntity<String> implements Seri
         return price;
     }
 
+    @Nullable
+    public PersistentCategory getCategory() {
+        return category;
+    }
+
 }

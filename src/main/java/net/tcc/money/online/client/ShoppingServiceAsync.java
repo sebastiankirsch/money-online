@@ -8,7 +8,9 @@ import net.tcc.money.online.shared.dto.Shop;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 public interface ShoppingServiceAsync {
 
@@ -30,4 +32,5 @@ public interface ShoppingServiceAsync {
 
     void loadPurchases(Range range, String columnName, boolean ascending, AsyncCallback<List<Purchase>> asyncCallback);
 
+    void loadCategorySpendings(AsyncCallback<Map<Category, BigDecimal>> asyncCallback);
 }

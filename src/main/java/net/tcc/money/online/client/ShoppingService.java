@@ -1,35 +1,38 @@
 package net.tcc.money.online.client;
 
+import com.google.gwt.user.client.rpc.RemoteService;
+import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 import com.google.gwt.view.client.Range;
 import net.tcc.money.online.shared.dto.Article;
 import net.tcc.money.online.shared.dto.Category;
 import net.tcc.money.online.shared.dto.Purchase;
 import net.tcc.money.online.shared.dto.Shop;
 
-import com.google.gwt.user.client.rpc.RemoteService;
-import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
-
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @RemoteServiceRelativePath("shoppingService")
 public interface ShoppingService extends RemoteService {
-	
-	Iterable<Shop> loadShops();
-	
-	Shop createShop(String name);
 
-	Iterable<Category> loadCategories();
+    Iterable<Shop> loadShops();
 
-	void createPurchase(Purchase purchase);
+    Shop createShop(String name);
 
-	Iterable<Article> loadArticles();
+    Iterable<Category> loadCategories();
 
-	Category createCategory(String name, Category category);
+    void createPurchase(Purchase purchase);
 
-	Category setParentFor(Category category, Category parent);
+    Iterable<Article> loadArticles();
 
-	Article setCategoryFor(Article article, Category category);
+    Category createCategory(String name, Category category);
 
-	List<Purchase> loadPurchases(Range range, String columnName, boolean ascending);
+    Category setParentFor(Category category, Category parent);
+
+    Article setCategoryFor(Article article, Category category);
+
+    List<Purchase> loadPurchases(Range range, String columnName, boolean ascending);
+
+    Map<Category, BigDecimal> loadCategorySpendings();
 
 }
