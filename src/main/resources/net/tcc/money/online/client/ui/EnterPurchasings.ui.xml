@@ -6,10 +6,10 @@
 		<g:Label>Bitte gebe Deine Anschaffungen an!</g:Label>
 	    <g:Grid ui:field="purchasings">
 	    	<g:row styleName="purchasingsHeader">
-	    		<g:cell>Article</g:cell>
-	    		<g:cell>Brand</g:cell>
+	    		<g:cell>Artikel</g:cell>
+	    		<g:cell>Marke</g:cell>
 	    		<g:cell>Bio</g:cell>
-	    		<g:cell>Lot size</g:cell>
+	    		<g:cell>Losgröße</g:cell>
 	    		<g:cell>Menge</g:cell>
 	    		<g:cell>Preis</g:cell>
 	    		<g:cell>Kategorie</g:cell>
