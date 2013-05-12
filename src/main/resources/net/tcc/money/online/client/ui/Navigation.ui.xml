@@ -6,6 +6,6 @@
 		<g:Anchor ui:field="newPurchase" href="#">Einkauf erfassen</g:Anchor>
 		<g:Anchor ui:field="manageCategories" href="#">Kategorien bearbeiten</g:Anchor>
         <g:Anchor ui:field="listPurchases" href="#">Einkäufe anzeigen</g:Anchor>
-        <g:Anchor ui:field="showDiagram" href="#">Diagramm anzeigen</g:Anchor>
+        <g:Anchor ui:field="totalExpenses" href="#">Gesamtausgaben</g:Anchor>
     </g:VerticalPanel>
 </ui:UiBinder>

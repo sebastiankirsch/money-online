@@ -1,4 +1,4 @@
-package net.tcc.money.online.client.ui;
+package net.tcc.money.online.client.ui.diagram;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -16,16 +16,16 @@ import java.util.Map;
 import static com.google.gwt.visualization.client.AbstractDataTable.ColumnType.NUMBER;
 import static com.google.gwt.visualization.client.AbstractDataTable.ColumnType.STRING;
 
-public class Diagram extends Composite {
+public class TotalExpenses extends Composite {
 
     private final HTMLPanel panel;
 
-    static interface MyUiBinder extends UiBinder<HTMLPanel, Diagram> {
+    static interface MyUiBinder extends UiBinder<HTMLPanel, TotalExpenses> {
     }
 
     private static MyUiBinder uiBinder = GWT.create(MyUiBinder.class);
 
-    public Diagram(Map<Category, BigDecimal> data) {
+    public TotalExpenses(Map<Category, BigDecimal> data) {
         panel = uiBinder.createAndBindUi(this);
         initWidget(panel);
         VisualizationUtils.loadVisualizationApi(createPieChart(data), PieChart.PACKAGE);

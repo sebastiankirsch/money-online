@@ -1,6 +1,7 @@
 package net.tcc.money.online.client;
 
 import net.tcc.money.online.client.ui.*;
+import net.tcc.money.online.client.ui.diagram.TotalExpenses;
 import net.tcc.money.online.shared.dto.Article;
 import net.tcc.money.online.shared.dto.Category;
 import net.tcc.money.online.shared.dto.Purchase;
@@ -47,7 +48,7 @@ public class OnlineMoney implements EntryPoint, ExceptionHandler {
         }, new Runnable() {
             @Override
             public void run() {
-                displayDiagram();
+                displayTotalExpenses();
             }
         }
         ));
@@ -124,7 +125,7 @@ public class OnlineMoney implements EntryPoint, ExceptionHandler {
         setContent(new ListPurchases(this.shoppingService, this));
     }
 
-    void displayDiagram() {
+    void displayTotalExpenses() {
         setContent(new Label("Daten werden geladen..."));
         this.shoppingService.loadCategorySpendings(new AsyncCallback<Map<Category, BigDecimal>>() {
 
@@ -135,7 +136,7 @@ public class OnlineMoney implements EntryPoint, ExceptionHandler {
 
             @Override
             public void onSuccess(Map<Category, BigDecimal> data) {
-                setContent(new Diagram(data));
+                setContent(new TotalExpenses(data));
             }
 
         });

@@ -26,15 +26,15 @@ public class Navigation extends Composite {
     Anchor listPurchases;
 
     @UiField
-    Anchor showDiagram;
+    Anchor totalExpenses;
 
-    public Navigation(Runnable newPurchaseAction, Runnable manageCategoriesAction, Runnable listPurchasesAction, Runnable showDiagramAction) {
+    public Navigation(Runnable newPurchaseAction, Runnable manageCategoriesAction, Runnable listPurchasesAction, Runnable totalExpensesAction) {
         initWidget(uiBinder.createAndBindUi(this));
 
         executeOnClick(this.newPurchase, newPurchaseAction);
         executeOnClick(this.manageCategories, manageCategoriesAction);
         executeOnClick(this.listPurchases, listPurchasesAction);
-        executeOnClick(this.showDiagram, showDiagramAction);
+        executeOnClick(this.totalExpenses, totalExpensesAction);
     }
 
     private static void executeOnClick(Anchor anchor, final Runnable action) {
