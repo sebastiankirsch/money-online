@@ -225,6 +225,12 @@
             <artifactId>jetty-xml</artifactId>
             <version>7.0.0.pre5</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.mortbay.jetty</groupId>
+                    <artifactId>jetty-util</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 
