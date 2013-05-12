@@ -7,5 +7,6 @@
 		<g:Anchor ui:field="manageCategories" href="#">Kategorien bearbeiten</g:Anchor>
         <g:Anchor ui:field="listPurchases" href="#">Einkäufe anzeigen</g:Anchor>
         <g:Anchor ui:field="totalExpenses" href="#">Gesamtausgaben</g:Anchor>
+        <g:Anchor ui:field="monthlyExpenses" href="#">Monatliche Ausgaben</g:Anchor>
     </g:VerticalPanel>
 </ui:UiBinder>

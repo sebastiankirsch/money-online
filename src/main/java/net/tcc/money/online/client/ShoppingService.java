@@ -7,6 +7,7 @@ import net.tcc.money.online.shared.dto.Article;
 import net.tcc.money.online.shared.dto.Category;
 import net.tcc.money.online.shared.dto.Purchase;
 import net.tcc.money.online.shared.dto.Shop;
+import net.tcc.money.online.shared.dto.diagram.MonthlyExpensesData;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -34,5 +35,7 @@ public interface ShoppingService extends RemoteService {
     List<Purchase> loadPurchases(Range range, String columnName, boolean ascending);
 
     Map<Category, BigDecimal> loadCategorySpendings();
+
+    MonthlyExpensesData loadMonthlyCategorySpendings();
 
 }

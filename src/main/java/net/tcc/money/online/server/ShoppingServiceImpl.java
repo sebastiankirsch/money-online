@@ -11,6 +11,7 @@ import net.tcc.money.online.client.ShoppingService;
 import net.tcc.money.online.server.domain.*;
 import net.tcc.money.online.shared.Constants;
 import net.tcc.money.online.shared.dto.*;
+import net.tcc.money.online.shared.dto.diagram.MonthlyExpensesData;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -18,10 +19,7 @@ import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
 import javax.jdo.Transaction;
 import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,6 +29,7 @@ import static com.google.appengine.repackaged.com.google.common.collect.Iterable
 import static com.google.appengine.repackaged.com.google.common.collect.Iterables.transform;
 import static com.google.appengine.repackaged.com.google.common.collect.Lists.newArrayList;
 import static java.lang.System.currentTimeMillis;
+import static java.util.Arrays.asList;
 import static net.tcc.gae.ServerTools.*;
 import static net.tcc.money.online.server.domain.PersistentArticle.toArticle;
 import static net.tcc.money.online.server.domain.PersistentCategory.toCategory;
@@ -106,8 +105,9 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
 
     @Override
     public Map<Category, BigDecimal> loadCategorySpendings() {
+        final long start = currentTimeMillis();
         final String dataSetId = getDataSetId();
-        return executeWithoutTransaction(new PersistenceTemplate<Map<Category, BigDecimal>>() {
+        Map<Category, BigDecimal> data = executeWithoutTransaction(new PersistenceTemplate<Map<Category, BigDecimal>>() {
             @Override
             public Map<Category, BigDecimal> doWithPersistenceManager(PersistenceManager persistenceManager) {
                 String fetchGroup = "calculateCategorySpendings";
@@ -142,6 +142,23 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
                 return data;
             }
         });
+        if (LOG.isLoggable(Level.INFO)) {
+            LOG.info((currentTimeMillis() - start) + "ms to fetch total expenses.");
+        }
+        return data;
+    }
+
+    @Override
+    public MonthlyExpensesData loadMonthlyCategorySpendings() {
+        final long start = currentTimeMillis();
+        MonthlyExpensesData data = new MonthlyExpensesData();
+        data.addMonths(asList(new Date(112, 0, 1), new Date(113, 1, 1), new Date(113, 3, 1), new Date(113, 9, 1)));
+        data.addCategory(new Category(null, "Essen", null), asList(new BigDecimal(77.77), new BigDecimal(88.88), new BigDecimal(77.77), new BigDecimal(77.77)));
+        data.addCategory(new Category(null, "Hygiene", null), asList(new BigDecimal(22.22), new BigDecimal(0), new BigDecimal(33.33), new BigDecimal(22.22)));
+        if (LOG.isLoggable(Level.INFO)) {
+            LOG.info((currentTimeMillis() - start) + "ms to fetch monthly expenses.");
+        }
+        return data;
     }
 
     @Nonnull

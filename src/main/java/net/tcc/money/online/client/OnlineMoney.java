@@ -1,6 +1,7 @@
 package net.tcc.money.online.client;
 
 import net.tcc.money.online.client.ui.*;
+import net.tcc.money.online.client.ui.diagram.MonthlyExpenses;
 import net.tcc.money.online.client.ui.diagram.TotalExpenses;
 import net.tcc.money.online.shared.dto.Article;
 import net.tcc.money.online.shared.dto.Category;
@@ -14,6 +15,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
+import net.tcc.money.online.shared.dto.diagram.MonthlyExpensesData;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -49,6 +51,11 @@ public class OnlineMoney implements EntryPoint, ExceptionHandler {
             @Override
             public void run() {
                 displayTotalExpenses();
+            }
+        }, new Runnable() {
+            @Override
+            public void run() {
+                displayMonthlyExpenses();
             }
         }
         ));
@@ -137,6 +144,23 @@ public class OnlineMoney implements EntryPoint, ExceptionHandler {
             @Override
             public void onSuccess(Map<Category, BigDecimal> data) {
                 setContent(new TotalExpenses(data));
+            }
+
+        });
+    }
+
+    void displayMonthlyExpenses() {
+        setContent(new Label("Daten werden geladen..."));
+        this.shoppingService.loadMonthlyCategorySpendings(new AsyncCallback<MonthlyExpensesData>() {
+
+            @Override
+            public void onFailure(Throwable caught) {
+                handleException("Konnte Daten nicht laden!", caught);
+            }
+
+            @Override
+            public void onSuccess(MonthlyExpensesData data) {
+                setContent(new MonthlyExpenses(data));
             }
 
         });

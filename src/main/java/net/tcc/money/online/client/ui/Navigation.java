@@ -28,13 +28,17 @@ public class Navigation extends Composite {
     @UiField
     Anchor totalExpenses;
 
-    public Navigation(Runnable newPurchaseAction, Runnable manageCategoriesAction, Runnable listPurchasesAction, Runnable totalExpensesAction) {
+    @UiField
+    Anchor monthlyExpenses;
+
+    public Navigation(Runnable newPurchaseAction, Runnable manageCategoriesAction, Runnable listPurchasesAction, Runnable totalExpensesAction, Runnable monthlyExpensesAction) {
         initWidget(uiBinder.createAndBindUi(this));
 
         executeOnClick(this.newPurchase, newPurchaseAction);
         executeOnClick(this.manageCategories, manageCategoriesAction);
         executeOnClick(this.listPurchases, listPurchasesAction);
         executeOnClick(this.totalExpenses, totalExpensesAction);
+        executeOnClick(this.monthlyExpenses, monthlyExpensesAction);
     }
 
     private static void executeOnClick(Anchor anchor, final Runnable action) {
