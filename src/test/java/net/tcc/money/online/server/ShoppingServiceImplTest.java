@@ -4,12 +4,14 @@ import com.google.appengine.api.taskqueue.dev.QueueStateInfo;
 import com.google.appengine.tools.development.testing.LocalTaskQueueTestConfig;
 import net.tcc.money.online.server.domain.PersistentArticle;
 import net.tcc.money.online.server.domain.PersistentCategory;
+import net.tcc.money.online.server.domain.PersistentPurchasing;
 import net.tcc.money.online.server.domain.PersistentShop;
 import net.tcc.money.online.shared.dto.*;
 import org.junit.Test;
 
 import javax.jdo.Extent;
 import javax.jdo.PersistenceManager;
+import javax.jdo.Transaction;
 import java.util.Date;
 
 import static com.google.appengine.repackaged.com.google.common.collect.Iterables.getOnlyElement;
@@ -79,6 +81,32 @@ public final class ShoppingServiceImplTest extends ServerSideTest {
         assertThat("Article is assigned to wrong Category!", persistentCategory.getKey(), is(equalTo(category.getKey())));
     }
 
+    @Test
+    public void createdPurchasingIsAssignedToNoCategoryIfSelectedCategoryMatchesArticleCategory() {
+        Shop shop = givenAShop();
+        Category category = givenACategory();
+        Article article = givenAnArticle(category);
+        Purchase purchase = new Purchase(shop, new Date());
+        purchase.add(new Purchasing(article, ONE, ONE, category));
+
+        objectUnderTest.createPurchase(purchase);
+
+        PersistentPurchasing purchasing = executeWithoutTransaction(new PersistenceTemplate<PersistentPurchasing>() {
+            @Override
+            public PersistentPurchasing doWithPersistenceManager(PersistenceManager persistenceManager) {
+                String fetchGroup = "fetchGroup";
+                persistenceManager.getFetchGroup(PersistentPurchasing.class, fetchGroup).addMember("category");
+                persistenceManager.getFetchPlan().addGroup(fetchGroup);
+                Extent<PersistentPurchasing> purchasings = persistenceManager.getExtent(PersistentPurchasing.class);
+                return getOnlyElement(purchasings);
+            }
+        });
+
+        assertThat(purchasing, is(notNullValue()));
+        PersistentCategory persistentCategory = purchasing.getCategory();
+        assertThat("Article is assigned to a Category!", persistentCategory, is(nullValue()));
+    }
+
     private Shop givenAShop() {
         Shop shop = executeWithTransaction(new PersistenceTemplate<Shop>() {
             @Override
@@ -105,6 +133,26 @@ public final class ShoppingServiceImplTest extends ServerSideTest {
         });
         assert "Category".equals(category.getName());
         return category;
+    }
+
+    private Article givenAnArticle(final Category category) {
+        Article article = executeWithoutTransaction(new PersistenceTemplate<Article>() {
+            @Override
+            public Article doWithPersistenceManager(PersistenceManager persistenceManager) {
+                PersistentCategory persistentCategory = null;
+                if (category != null) {
+                    persistentCategory = persistenceManager.getObjectById(PersistentCategory.class, category.getKey());
+                }
+                Transaction tx = startTransaction(persistenceManager);
+                PersistentArticle article = new PersistentArticle(DATA_SET_ID, "Article", null, false, null);
+                article.setCategory(persistentCategory);
+                article = persistenceManager.makePersistent(article);
+                tx.commit();
+                return article.toArticle();
+            }
+        });
+        assert "Article".equals(article.getName());
+        return article;
     }
 
 }

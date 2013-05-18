@@ -361,16 +361,18 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
             @Override
             public PersistentPurchasing apply(@Nullable Purchasing purchasing) {
                 assert purchasing != null;
-                Category purchasingCategory = purchasing.getCategory();
-                return new PersistentPurchasing(loadOrCreateArticle(pm, dataSetId, purchasing.getArticle(), purchasingCategory),
-                        purchasing.getQuantity(), purchasing.getPrice(), loadCategory(pm, purchasingCategory));
+                PersistentCategory persistentCategory = loadCategory(pm, purchasing.getCategory());
+                PersistentArticle article = loadOrCreateArticle(pm, dataSetId, purchasing.getArticle(), persistentCategory);
+                if (Objects.equals(persistentCategory, article.getCategory())) {
+                    persistentCategory = null;
+                }
+                return new PersistentPurchasing(article, purchasing.getQuantity(), purchasing.getPrice(), persistentCategory);
             }
         };
     }
 
     @Nonnull
-    private PersistentArticle loadOrCreateArticle(PersistenceManager pm, @Nonnull String dataSetId,
-                                                  @Nonnull Article article, @Nullable Category purchasingCategory) {
+    private PersistentArticle loadOrCreateArticle(PersistenceManager pm, @Nonnull String dataSetId, @Nonnull Article article, @Nullable PersistentCategory purchasingCategory) {
         try {
             Query query = pm
                     .newQuery(PersistentArticle.class,
@@ -381,13 +383,9 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
                     article.getName(), article.getBrand(), article.isVegan(), article.getLotSize());
             PersistentArticle persistedArticle = getOnlyElement(articles, null);
             if (persistedArticle == null) {
-                PersistentCategory persistentCategory = null;
-                if (purchasingCategory != null) {
-                    persistentCategory = loadCategory(pm, purchasingCategory);
-                }
                 persistedArticle = new PersistentArticle(dataSetId, article.getName(), article.getBrand(),
                         article.isVegan(), article.getLotSize());
-                persistedArticle.setCategory(persistentCategory);
+                persistedArticle.setCategory(purchasingCategory);
                 Transaction tx = startTransaction(pm);
                 persistedArticle = pm.makePersistent(persistedArticle);
                 tx.commit();
