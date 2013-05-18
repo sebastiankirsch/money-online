@@ -4,6 +4,7 @@ import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.appengine.repackaged.com.google.common.base.Function;
+import com.google.appengine.repackaged.com.google.common.collect.Ordering;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.google.gwt.view.client.Range;
 import net.tcc.gae.ServerTools;
@@ -28,8 +29,10 @@ import static com.google.appengine.api.taskqueue.TaskOptions.Method.POST;
 import static com.google.appengine.repackaged.com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.appengine.repackaged.com.google.common.collect.Iterables.transform;
 import static com.google.appengine.repackaged.com.google.common.collect.Lists.newArrayList;
+import static com.google.appengine.repackaged.com.google.common.collect.Maps.newHashMap;
+import static com.google.appengine.repackaged.com.google.common.collect.Sets.newHashSet;
 import static java.lang.System.currentTimeMillis;
-import static java.util.Arrays.asList;
+import static java.math.BigDecimal.ZERO;
 import static net.tcc.gae.ServerTools.*;
 import static net.tcc.money.online.server.domain.PersistentArticle.toArticle;
 import static net.tcc.money.online.server.domain.PersistentCategory.toCategory;
@@ -106,19 +109,10 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
     @Override
     public Map<Category, BigDecimal> loadCategorySpendings() {
         final long start = currentTimeMillis();
-        final String dataSetId = getDataSetId();
         Map<Category, BigDecimal> data = executeWithoutTransaction(new PersistenceTemplate<Map<Category, BigDecimal>>() {
             @Override
             public Map<Category, BigDecimal> doWithPersistenceManager(PersistenceManager persistenceManager) {
-                String fetchGroup = "calculateCategorySpendings";
-                persistenceManager.getFetchGroup(PersistentPurchase.class, fetchGroup).addMember("purchasings");
-                persistenceManager.getFetchGroup(PersistentPurchasing.class, fetchGroup).addMember("article").addMember("category");
-                persistenceManager.getFetchGroup(PersistentArticle.class, fetchGroup).addMember("category");
-                persistenceManager.getFetchPlan().addGroup(fetchGroup);
-                Query query = persistenceManager.newQuery(PersistentPurchase.class, "dataSetId == pDataSetId");
-                query.declareParameters("java.lang.String pDataSetId");
-                @SuppressWarnings("unchecked")
-                Collection<PersistentPurchase> purchases = (Collection<PersistentPurchase>) query.execute(dataSetId);
+                Collection<PersistentPurchase> purchases = getPersistentPurchases(persistenceManager);
 
                 Map<PersistentCategory, BigDecimal> persistentData = new HashMap<>();
                 for (PersistentPurchase purchase : purchases) {
@@ -129,7 +123,7 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
                         }
                         BigDecimal sum = persistentData.get(category);
                         if (sum == null) {
-                            sum = BigDecimal.ZERO;
+                            sum = ZERO;
                         }
                         persistentData.put(category, sum.add(purchasing.getPrice()));
                     }
@@ -151,14 +145,80 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
     @Override
     public MonthlyExpensesData loadMonthlyCategorySpendings() {
         final long start = currentTimeMillis();
-        MonthlyExpensesData data = new MonthlyExpensesData();
-        data.addMonths(asList(new Date(112, 0, 1), new Date(113, 1, 1), new Date(113, 3, 1), new Date(113, 9, 1)));
-        data.addCategory(new Category(null, "Essen", null), asList(new BigDecimal(77.77), new BigDecimal(88.88), new BigDecimal(77.77), new BigDecimal(77.77)));
-        data.addCategory(new Category(null, "Hygiene", null), asList(new BigDecimal(22.22), new BigDecimal(0), new BigDecimal(33.33), new BigDecimal(22.22)));
+        MonthlyExpensesData data = executeWithoutTransaction(new PersistenceTemplate<MonthlyExpensesData>() {
+            @Override
+            public MonthlyExpensesData doWithPersistenceManager(PersistenceManager persistenceManager) {
+                Collection<PersistentPurchase> purchases = getPersistentPurchases(persistenceManager);
+                Set<Date> months = newHashSet();
+                Set<PersistentCategory> categories = newHashSet();
+                Map<Date, Map<PersistentCategory, BigDecimal>> rawData = newHashMap();
+                for (PersistentPurchase purchase : purchases) {
+                    Date month = toMonth(purchase.getPurchaseDate());
+                    months.add(month);
+                    Map<PersistentCategory, BigDecimal> categoryData = rawData.get(month);
+                    if (categoryData == null) {
+                        categoryData = newHashMap();
+                        rawData.put(month, categoryData);
+                    }
+                    for (PersistentPurchasing purchasing : purchase) {
+                        PersistentCategory category = purchasing.getCategory();
+                        if (category == null) {
+                            category = purchasing.getArticle().getCategory();
+                        }
+                        categories.add(category);
+                        BigDecimal sum = categoryData.get(category);
+                        if (sum == null) {
+                            sum = ZERO;
+                        }
+                        categoryData.put(category, sum.add(purchasing.getPrice()));
+                    }
+                }
+                MonthlyExpensesData data = new MonthlyExpensesData();
+                data.addMonths(Ordering.natural().sortedCopy(months));
+                for (PersistentCategory category : categories) {
+                    ArrayList<BigDecimal> sums = newArrayList();
+                    for (Date month : months) {
+                        BigDecimal sum = rawData.get(month).get(category);
+                        if (sum == null) {
+                            sum = ZERO;
+                        }
+                        sums.add(sum);
+                    }
+                    Category plainCategory = category == null ? null : category.toCategory();
+                    data.addCategory(plainCategory, sums);
+                }
+
+                return data;
+            }
+
+            @SuppressWarnings("deprecation")
+            private Date toMonth(Date date) {
+                return new Date(date.getYear(), date.getMonth(), 1);
+            }
+
+        });
         if (LOG.isLoggable(Level.INFO)) {
             LOG.info((currentTimeMillis() - start) + "ms to fetch monthly expenses.");
         }
         return data;
+    }
+
+    Collection<PersistentPurchase> getPersistentPurchases(PersistenceManager persistenceManager) {
+        final long start = currentTimeMillis();
+        String dataSetId = getDataSetId();
+        String fetchGroup = "calculateCategorySpendings";
+        persistenceManager.getFetchGroup(PersistentPurchase.class, fetchGroup).addMember("purchasings");
+        persistenceManager.getFetchGroup(PersistentPurchasing.class, fetchGroup).addMember("article").addMember("category");
+        persistenceManager.getFetchGroup(PersistentArticle.class, fetchGroup).addMember("category");
+        persistenceManager.getFetchPlan().addGroup(fetchGroup);
+        Query query = persistenceManager.newQuery(PersistentPurchase.class, "dataSetId == pDataSetId");
+        query.declareParameters("java.lang.String pDataSetId");
+        @SuppressWarnings("unchecked")
+        Collection<PersistentPurchase> purchases = (Collection<PersistentPurchase>) query.execute(dataSetId);
+        if (LOG.isLoggable(Level.INFO)) {
+            LOG.info((currentTimeMillis() - start) + "ms to fetch all purchases.");
+        }
+        return purchases;
     }
 
     @Nonnull
