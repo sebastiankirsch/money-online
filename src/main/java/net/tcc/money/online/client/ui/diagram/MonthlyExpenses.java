@@ -15,7 +15,6 @@ import static com.google.gwt.visualization.client.AbstractDataTable.ColumnType.D
 import static com.google.gwt.visualization.client.AbstractDataTable.ColumnType.NUMBER;
 import static com.google.gwt.visualization.client.visualizations.AreaChart.Options;
 import static com.google.gwt.visualization.client.visualizations.AreaChart.PACKAGE;
-import static java.util.Arrays.asList;
 
 public class MonthlyExpenses extends VerticalPanel {
 
@@ -40,7 +39,7 @@ public class MonthlyExpenses extends VerticalPanel {
                 dataTable.addRows(data.getNumberOfRows());
                 dataTable.addColumn(DATE, "Zeitraum");
                 for (Category category : data.getCategories()) {
-                    dataTable.addColumn(NUMBER, category.getName());
+                    dataTable.addColumn(NUMBER, category == null ? "Nicht zugeordnet" : category.getName());
                 }
                 int row = 0;
                 for (Date month : data.getMonths()) {
