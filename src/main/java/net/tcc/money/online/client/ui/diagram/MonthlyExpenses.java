@@ -1,5 +1,6 @@
 package net.tcc.money.online.client.ui.diagram;
 
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.visualization.client.AbstractDataTable;
 import com.google.gwt.visualization.client.DataTable;
@@ -11,8 +12,8 @@ import net.tcc.money.online.shared.dto.diagram.MonthlyExpensesData;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import static com.google.gwt.visualization.client.AbstractDataTable.ColumnType.DATE;
 import static com.google.gwt.visualization.client.AbstractDataTable.ColumnType.NUMBER;
+import static com.google.gwt.visualization.client.AbstractDataTable.ColumnType.STRING;
 import static com.google.gwt.visualization.client.visualizations.AreaChart.Options;
 import static com.google.gwt.visualization.client.visualizations.AreaChart.PACKAGE;
 
@@ -35,15 +36,16 @@ public class MonthlyExpenses extends VerticalPanel {
             }
 
             private AbstractDataTable createData(MonthlyExpensesData data) {
+                DateTimeFormat monthFormat = DateTimeFormat.getFormat("y/M");
                 DataTable dataTable = DataTable.create();
                 dataTable.addRows(data.getNumberOfRows());
-                dataTable.addColumn(DATE, "Zeitraum");
+                dataTable.addColumn(STRING, "Zeitraum");
                 for (Category category : data.getCategories()) {
                     dataTable.addColumn(NUMBER, category == null ? "Nicht zugeordnet" : category.getName());
                 }
                 int row = 0;
                 for (Date month : data.getMonths()) {
-                    dataTable.setValue(row++, 0, month);
+                    dataTable.setValue(row++, 0, monthFormat.format(month));
                 }
                 int column = 0;
                 for (Category category : data.getCategories()) {
@@ -60,6 +62,8 @@ public class MonthlyExpenses extends VerticalPanel {
             private Options createOptions() {
                 Options options = Options.create();
                 options.setTitle("Monatliche Ausgaben nach Kategorie");
+                options.setTitleX("Monat");
+                options.setTitleY("Ausgaben");
                 options.setWidth(800);
                 options.setHeight(600);
                 options.setStacked(true);
