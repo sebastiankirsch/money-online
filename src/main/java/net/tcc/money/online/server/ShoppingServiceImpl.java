@@ -289,12 +289,7 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
 
     @Nonnull
     private PersistentShop loadShop(PersistenceManager pm, @Nonnull Shop shop) {
-        Transaction tx = startTransaction(pm);
-        try {
-            return pm.getObjectById(PersistentShop.class, shop.getKey());
-        } finally {
-            tx.rollback();
-        }
+        return pm.getObjectById(PersistentShop.class, shop.getKey());
     }
 
     @Nonnull
@@ -306,16 +301,16 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
             @Override
             public PersistentPurchasing apply(@Nullable Purchasing purchasing) {
                 assert purchasing != null;
-                return new PersistentPurchasing(loadOrCreateArticle(pm, dataSetId, purchasing.getArticle()),
-                        purchasing.getQuantity(), purchasing.getPrice(), loadCategory(pm, purchasing.getCategory()));
+                Category purchasingCategory = purchasing.getCategory();
+                return new PersistentPurchasing(loadOrCreateArticle(pm, dataSetId, purchasing.getArticle(), purchasingCategory),
+                        purchasing.getQuantity(), purchasing.getPrice(), loadCategory(pm, purchasingCategory));
             }
         };
     }
 
     @Nonnull
     private PersistentArticle loadOrCreateArticle(PersistenceManager pm, @Nonnull String dataSetId,
-                                                  @Nonnull Article article) {
-        Transaction tx = startTransaction(pm);
+                                                  @Nonnull Article article, @Nullable Category purchasingCategory) {
         try {
             Query query = pm
                     .newQuery(PersistentArticle.class,
@@ -326,8 +321,14 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
                     article.getName(), article.getBrand(), article.isVegan(), article.getLotSize());
             PersistentArticle persistedArticle = getOnlyElement(articles, null);
             if (persistedArticle == null) {
+                PersistentCategory persistentCategory = null;
+                if (purchasingCategory != null) {
+                    persistentCategory = loadCategory(pm, purchasingCategory);
+                }
                 persistedArticle = new PersistentArticle(dataSetId, article.getName(), article.getBrand(),
                         article.isVegan(), article.getLotSize());
+                persistedArticle.setCategory(persistentCategory);
+                Transaction tx = startTransaction(pm);
                 persistedArticle = pm.makePersistent(persistedArticle);
                 tx.commit();
                 if (LOG.isLoggable(Level.INFO)) {
@@ -349,16 +350,11 @@ public class ShoppingServiceImpl extends RemoteServiceServlet implements Shoppin
         if (category == null) {
             return null;
         }
-        Transaction tx = startTransaction(pm);
-        try {
-            PersistentCategory persistentCategory = pm.getObjectById(PersistentCategory.class, category.getKey());
-            if (LOG.isLoggable(Level.FINE)) {
-                LOG.fine("Loaded " + persistentCategory);
-            }
-            return persistentCategory;
-        } finally {
-            tx.rollback();
+        PersistentCategory persistentCategory = pm.getObjectById(PersistentCategory.class, category.getKey());
+        if (LOG.isLoggable(Level.FINE)) {
+            LOG.fine("Loaded " + persistentCategory);
         }
+        return persistentCategory;
     }
 
 }
