@@ -85,6 +85,7 @@ public final class ShoppingServiceImplTest extends ServerSideTest {
             public Shop doWithPersistenceManager(PersistenceManager persistenceManager) {
                 PersistentShop shop = new PersistentShop(DATA_SET_ID, "Shop");
                 shop = persistenceManager.makePersistent(shop);
+                persistenceManager.flush();
                 return shop.toShop();
             }
         });
@@ -98,6 +99,7 @@ public final class ShoppingServiceImplTest extends ServerSideTest {
             public Category doWithPersistenceManager(PersistenceManager persistenceManager) {
                 PersistentCategory category = new PersistentCategory(DATA_SET_ID, "Category", null);
                 category = persistenceManager.makePersistent(category);
+                persistenceManager.flush();
                 return category.toCategory();
             }
         });
